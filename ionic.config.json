@@ -1,0 +1,7 @@
+{
+  "name": "ionic-vue3-datatable",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
