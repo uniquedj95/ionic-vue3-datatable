@@ -1,0 +1,1588 @@
+<template>
+  <div :class="{ card: cardMode }">
+    <div class="card-header" v-if="cardMode">
+      <div class="text-center">
+        {{ cardTitle }}
+      </div>
+    </div>
+    <div :class="{ 'card-body': cardMode }">
+      <div :class="tableWrapperClasses" class="table-wrapper">
+        <table class="table" :class="tableClasses">
+          <thead>
+            <tr v-if="showToolsRow" class="table-tools">
+              <th :colspan="headerColSpan">
+                <ion-grid>
+                  <ion-row>
+                    <ion-col size-md="4">
+                      <ion-row>
+                        <ion-col size-md="6" v-if="globalSearch && globalSearch.visibility">
+                          
+                        </ion-col>
+                      </ion-row>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+                <div class="row header-row no-gutters">
+                  <div class="col-md-4">
+                    <div class="row no-gutters">
+                      <div
+                        class="col-md-6 input-group global-search"
+                        v-if="globalSearch.visibility"
+                      >
+                        <div
+                          class="form-group has-clear-right"
+                          :class="globalSearch.class"
+                        >
+                          <span
+                            v-if="globalSearch.showClearButton"
+                            class="form-control-feedback global-search-clear"
+                            @click="clearGlobalSearch"
+                          >
+                            <ion-icon :icon="closeCircle"></ion-icon>
+                          </span>
+                          <input
+                            v-if="globalSearch.searchOnPressEnter"
+                            ref="globalSearch"
+                            type="text"
+                            class="form-control"
+                            :placeholder="globalSearch.placeholder"
+                            @keyup.enter="
+                              updateGlobalSearchHandler($event.target?.value)
+                            "
+                          />
+                          <input
+                            v-else
+                            ref="globalSearch"
+                            type="text"
+                            class="form-control"
+                            :placeholder="globalSearch.placeholder"
+                            @keyup.stop="
+                              updateGlobalSearch($event.target?.value)
+                            "
+                          />
+                        </div>
+                      </div>
+                      <!-- global search text ends here -->
+
+                      <!-- refresh & reset button starts here -->
+                      <div class="col-md-6">
+                        <div
+                          class="btn-group"
+                          role="group"
+                          aria-label="Table Actions buttons"
+                        >
+                          <button
+                            v-if="showRefreshButton"
+                            type="button"
+                            class="btn btn-secondary refresh-button"
+                            @click="$emit('refresh-data')"
+                          >
+                            <slot name="refresh-button-text"> Refresh </slot>
+                          </button>
+                          <button
+                            type="button"
+                            v-if="showResetButton"
+                            class="btn btn-secondary reset-button"
+                            @click="resetQuery"
+                          >
+                            <slot name="reset-button-text"> Reset Query </slot>
+                          </button>
+                        </div>
+                      </div>
+                      <!-- refresh & reset button ends here -->
+                    </div>
+                  </div>
+
+                  <!-- action buttons starts here -->
+                  <div class="col-md-8">
+                    <slot name="action-buttons">
+                      <div
+                        class="btn-group float-right"
+                        role="group"
+                        aria-label="Basic example"
+                      >
+                        <button
+                          v-for="(action, key, index) in actions"
+                          :key="index"
+                          type="button"
+                          class="btn"
+                          :class="getActionButtonClass(action)"
+                          @click="emitActionEvent(action)"
+                        >
+                          <slot :name="action.label">
+                            <span v-html="action.label"></span>
+                          </slot>
+                        </button>
+                      </div>
+                    </slot>
+                  </div>
+                  <!-- action buttons button ends here -->
+                </div>
+                <!-- <a href="" v-if="allRowsSelected">sadfsdf</a> -->
+              </th>
+            </tr>
+
+            <tr>
+              <select-all-rows-check-box
+                v-if="checkboxRows"
+                :allRowsSelected="allRowsSelected"
+                :currentPageSelectionCount="currentPageSelectionCount"
+                @selectAll="selectAllCheckbox"
+              />
+
+              <slot name="columns" :columns="cColumns">
+                <template v-for="(column, key, index) in cColumns">
+                  <th
+                    v-if="canShowColumn(column)"
+                    :key="index"
+                    v-on="
+                      isSortableColumn(column)
+                        ? { click: () => updateSortQuery(column) }
+                        : {}
+                    "
+                    class="column-header"
+                    :class="columnClasses(column)"
+                  >
+                    <slot
+                      :name="'column_' + getCellSlotName(column)"
+                      :column="column"
+                    >
+                      {{ column.label }}
+                    </slot>
+
+                    <template v-if="isSortableColumn(column)">
+                      <SortIcon :sort="query.sort" :column="column">
+                        <template slot="sort-asc-icon">
+                          <slot name="sort-asc-icon"> &#x1F825; </slot>
+                        </template>
+                        <template slot="sort-desc-icon">
+                          <slot name="sort-desc-icon"> &#x1F827; </slot>
+                        </template>
+                        <template slot="no-sort-icon">
+                          <slot name="no-sort-icon"> &#x1F825;&#x1F827; </slot>
+                        </template>
+                      </SortIcon>
+                    </template>
+                  </th>
+                </template>
+              </slot>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- filter row starts here -->
+            <tr class="table-active" v-if="showFilterRow">
+              <td v-show="checkboxRows"></td>
+              <template v-for="(column, key, index) in cColumns">
+                <td v-if="canShowColumn(column)" :key="index" align="center">
+                  <template v-if="hasFilter(column)">
+                    <SimpleFilter
+                      v-if="column.filter?.type === 'simple'"
+                      :column="column"
+                      @updateFilter="updateFilter"
+                      @clearFilter="clearFilter"
+                    >
+                      <template slot="simple-filter-clear-icon">
+                        <slot name="simple-filter-clear-icon"> &#x24E7; </slot>
+                      </template>
+                    </SimpleFilter>
+                    <MultiSelect
+                      v-if="column.filter?.type === 'select'"
+                      :options="column.filter?.options"
+                      :column="column"
+                      @updateMultiSelectFilter="updateMultiSelectFilter"
+                      @clearFilter="clearFilter"
+                    ></MultiSelect>
+                    <template v-if="column.filter?.type === 'custom'">
+                      <slot :name="column.filter?.slotName" :column="column">
+                      </slot>
+                    </template>
+                  </template>
+                </td>
+              </template>
+            </tr>
+            <!-- filter row ends here -->
+
+            <!-- data rows stars here -->
+            <table-row
+              v-for="(row, index) in cRows"
+              :key="index"
+              :row="row"
+              :columns="cColumns"
+              :rowIndex="index"
+              :checkboxRows="checkboxRows"
+              :rowsSelectable="rowsSelectable"
+              :selectedItems="selectedItems"
+              :highlightRowHover="highlightRowHover"
+              :highlightRowHoverColor="highlightRowHoverColor"
+              :propPowClasses="classes.row"
+              :propCellClasses="classes.cell"
+              :uniqueId="uniqueId"
+              @addRow="handleAddRow"
+              @removeRow="handleRemoveRow"
+            >
+              <template
+                v-for="column in columns"
+                :slot="'' + getCellSlotName(column)"
+              >
+                <slot
+                  :name="getCellSlotName(column)"
+                  :row="row"
+                  :column="column"
+                  :cellValue="getProperty(row, column.name)"
+                >
+                  {{ getProperty(row, column.name) }}
+                </slot>
+              </template>
+            </table-row>
+            <!-- empty row starts here -->
+            <tr v-show="cRows.length === 0">
+              <td :colspan="headerColSpan">
+                <slot name="empty-results"> No results found </slot>
+              </td>
+            </tr>
+            <!-- empty row ends here -->
+
+            <!-- data rows ends here -->
+
+            <!-- Pagination row starts here -->
+            <tr v-if="showPaginationRow" class="footer-pagination-row">
+              <td :colspan="headerColSpan">
+                <div class="row pagination-row no-gutters">
+                  <!-- pagination starts here -->
+                  <div class="col-md-8">
+                    <div v-if="pagination">
+                      <Pagination
+                        v-model:currentPage="currentPage"
+                        v-model:perPageItems="perPageItems"
+                        :perPageOptions="perPageOptions"
+                        :total="totalFilteredRows"
+                        :visibleButtons="visibleButtons"
+                      >
+                        <template slot="paginataion-previous-button">
+                          <slot name="paginataion-previous-button">
+                            &laquo;
+                          </slot>
+                        </template>
+                        <template slot="paginataion-next-button">
+                          <slot name="paginataion-next-button"> &raquo; </slot>
+                        </template>
+                      </Pagination>
+                    </div>
+                  </div>
+                  <!-- pagination ends here -->
+
+                  <!-- pagination info start here -->
+                  <div class="col-md-4">
+                    <div class="text-right justify-content-center">
+                      <template v-if="showPaginationInfo">
+                        <slot
+                          name="pagination-info"
+                          :totalRows="totalRows"
+                          :totalFilteredRows="totalFilteredRows"
+                          :totalOriginalRows="totalOriginalRows"
+                        >
+                          <template v-if="totalRows != 0">
+                            From 1 to {{ totalRows }} of
+                            {{ totalFilteredRows }} entries
+                          </template>
+                          <template v-else> No results found </template>
+                          <template>
+                            ({{ totalOriginalRows }} total records)
+                          </template>
+                        </slot>
+                      </template>
+                      <template
+                        v-if="
+                          showSelectedRowsInfo &&
+                          showPaginationInfo &&
+                          isSelectable
+                        "
+                      >
+                        <slot name="pagination-selected-rows-separator">
+                          |
+                        </slot>
+                      </template>
+                      <template v-if="showSelectedRowsInfo && isSelectable">
+                        <slot
+                          name="selected-rows-info"
+                          :totalSelectedItems="totalSelectedItems"
+                        >
+                          {{ totalSelectedItems }} rows selected
+                        </slot>
+                      </template>
+                    </div>
+                  </div>
+                  <!-- pagination info ends here -->
+                </div>
+              </td>
+            </tr>
+            <!-- Pagination ends starts here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer" v-if="cardMode">
+      <slot name="card-footer">
+        <div class="row">
+          <!-- pagination starts here -->
+          <div class="col-md-6">
+            <div v-if="pagination">
+              <Pagination
+                v-model:currentPage="currentPage"
+                v-model:perPageItems="perPageItems"
+                :perPageOptions="perPageOptions"
+                :total="totalFilteredRows"
+                :visibleButtons="visibleButtons"
+              >
+                <template slot="paginataion-previous-button">
+                  <slot name="paginataion-previous-button"> &laquo; </slot>
+                </template>
+                <template slot="paginataion-next-button">
+                  <slot name="paginataion-next-button"> &raquo; </slot>
+                </template>
+              </Pagination>
+            </div>
+          </div>
+          <!-- pagination ends here -->
+
+          <!-- pagination info start here -->
+          <div class="col-md-6">
+            <div class="text-right justify-content-center">
+              <template v-if="showPaginationInfo">
+                <slot
+                  name="pagination-info"
+                  :totalRows="totalRows"
+                  :totalFilteredRows="totalFilteredRows"
+                  :totalOriginalRows="totalOriginalRows"
+                >
+                  <template v-if="totalRows != 0">
+                    From 1 to {{ totalRows }} of {{ totalFilteredRows }} entries
+                  </template>
+                  <template v-else> No results found </template>
+                  <template> ({{ totalOriginalRows }} total records) </template>
+                </slot>
+              </template>
+              <template v-if="showPaginationInfo && showSelectedRowsInfo">
+                <slot name="pagination-selected-rows-separator"> | </slot>
+              </template>
+              <template v-if="showSelectedRowsInfo">
+                <slot
+                  name="selected-rows-info"
+                  :totalSelectedItems="totalSelectedItems"
+                >
+                  {{ totalSelectedItems }} rows selected
+                </slot>
+              </template>
+            </div>
+          </div>
+          <!-- pagination info ends here -->
+        </div>
+      </slot>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import {
+  isEqual,
+  debounce,
+  cloneDeep,
+  differenceWith,
+  differenceBy,
+  intersectionWith,
+  intersectionBy,
+  orderBy,
+  get,
+  omit,
+  clone,
+  has,
+  findIndex,
+  isArray,
+} from "lodash";
+import TableRow from "./TableRow.vue";
+import SelectAllRowsCheckBox from "./SelectAllRowsCheckBox.vue";
+import SortIcon from "./SortIcon.vue";
+import Pagination from "./CustomPagination.vue";
+import SimpleFilter from "./filters/SimpleFilter.vue";
+import MultiSelect from "./filters/MultiSelect.vue";
+import {
+  computed,
+  defineComponent,
+  nextTick,
+  onMounted,
+  PropType,
+  ref,
+  watch,
+} from "vue";
+import {
+  GlobalSearchConfig,
+  TableActionsBtn,
+  TableColumn,
+  TableColumnFilter,
+  TableConfig,
+  TableCSSClasses,
+  TableFilterQuery,
+} from "@/interfaces/datatable";
+import { closeCircle } from "ionicons/icons";
+
+export default defineComponent({
+  props: {
+    rows: {
+      type: Object as PropType<any[]>,
+      required: true,
+    },
+    columns: {
+      type: Object as PropType<TableColumn[]>,
+      required: true,
+    },
+    totalRows: {
+      type: Number,
+      default: 0,
+    },
+    showLoader: {
+      type: Boolean,
+      default: false,
+    },
+    config: {
+      type: Object as PropType<TableConfig>,
+      default: () => ({}),
+    },
+    classes: {
+      type: Object as PropType<TableCSSClasses>,
+      default: () => ({}),
+    },
+    actions: {
+      type: Object as PropType<TableActionsBtn[]>,
+      default: () => [] as Array<TableActionsBtn>,
+    },
+    customFilters: {
+      type: Object as PropType<TableColumnFilter[]>,
+      ddefault: () => [],
+    },
+  },
+  // emits: ["resetQuery", "selectRow", "unselectRow", "selectAllRows", "unselectAllRows", "changeQuery"] as keyof TableActionsBtn.eventName,
+  setup(props, { emit }) {
+    console.log(props.columns)
+    const cRows = ref(cloneDeep(props.rows));
+    const cardTitle = ref(props.config.cardTitle || "");
+    const currentPage = ref(props.config.currentPage || 1);
+    const perPageItems = ref(props.config.perPageItems || 10);
+    const loaderText = ref(props.config.loaderText || "Loading...");
+    const tempFilteredResults = ref<any[]>([]);
+    const selectedItems = ref<any[]>([]);
+    const allRowsSelected = ref(false);
+    const totalRows = computed(() => props.rows.length);
+    const totalFilteredRows = computed(() =>
+      serverMode.value ? totalRows.value : tempFilteredResults.value.length
+    );
+    const totalSelectedItems = computed(() => selectedItems.value.length);
+    const totalFilteredResults = computed(
+      () => tempFilteredResults.value.length
+    );
+    const totalOriginalRows = computed(() =>
+      serverMode.value ? totalFilteredRows.value : props.rows.length
+    );
+    const lastSelectedItemIndex = ref(0);
+    const isFirstTime = ref(true);
+    const isResponsive = ref(true);
+    const canEmitQueries = ref(false);
+    const cardMode = ref(get(props.config, "cardMode", true));
+    const serverMode = ref(get(props.config, "serverMode", false));
+    const checkboxRows = ref(get(props.config, "checkboxRows", false));
+    const rowsSelectable = ref(get(props.config, "rowsSelectable", false));
+    const multiColumnSort = ref(get(props.config, "multiColumnSort", false));
+    const showPaginationInfo = ref(get(props.config, "paginationInfo", true));
+    const showSelectedRowsInfo = ref(
+      get(props.config, "selectedRowsInfo", false)
+    );
+    const showRefreshButton = ref(get(props.config, "showRefreshButton", true));
+    const showResetButton = ref(get(props.config, "showResetButton", true));
+    const highlightRowHover = ref(get(props.config, "highlightRowHover", true));
+    const preservePageOnDataChange = computed<boolean>(() =>
+      get(props.config, "preservePageOnDataChange", false)
+    );
+    const pagination = computed(() => get(props.config, "pagination", true));
+    const visibleButtons = computed(() => props.config.visibleButtons || 7);
+    const perPageOptions = computed(
+      () => props.config.perPageOptions || [5, 10, 15]
+    );
+
+    const cColumns = computed(() => {
+      return props.columns.map((column, index) => {
+        column.id = index + 1;
+        console.log(column)
+        return column;
+      });
+    });
+
+    const highlightRowHoverColor = computed(() => {
+      return highlightRowHover.value
+        ? get(props.config, "highlightRowHoverColor", "#d6d6d6")
+        : "";
+    });
+
+    const uniqueId = computed(() => {
+      let uniqueId = "";
+      if (!hasUniqueId.value) {
+        uniqueId = "id";
+        return uniqueId;
+      }
+      cColumns.value.some((column, key) => {
+        if (get(column, "uniqueId")) {
+          uniqueId = column.name;
+          return true;
+        }
+      });
+      return uniqueId;
+    });
+
+    const headerColSpan = computed(() => {
+      let count = checkboxRows.value ? 1 : 0;
+      count += cColumns.value.filter((column) => canShowColumn(column)).length;
+      return count;
+    });
+
+     const globalSearch = ref<GlobalSearchConfig>({
+      placeholder: get(
+        props.config,
+        "globalSearch.placeholder",
+        "Enter search text"
+      ),
+      visibility: get(props.config, "globalSearch.visibility", true),
+      caseSensitive: get(props.config, "globalSearch.caseSensitive", false),
+      showClearButton: get(props.config, "globalSearch.showClearButton", true),
+      searchOnPressEnter: get(
+        props.config,
+        "globalSearch.searchOnPressEnter",
+        false
+      ),
+      searchDebounceRate: get(
+        props.config,
+        "globalSearch.searchDebounceRate",
+        60
+      ),
+      class: get(props.config, "globalSearch.class", ""),
+      init: get(props.config, "globalSearch.init.value", ""),
+    });
+
+
+    const showToolsRow = computed(() => {
+      return (
+        globalSearch.value.visibility ||
+        showRefreshButton ||
+        showResetButton ||
+        props.actions.length > 0
+      );
+    });
+
+    const showFilterRow = computed(() => {
+      let showRow = false;
+      cColumns.value.some((column, key) => {
+        if (has(column, "filter")) {
+          showRow = true;
+          return true;
+        }
+      });
+      return showRow;
+    });
+
+    const showPaginationRow = computed(() => {
+      return (
+        !cardMode.value &&
+        (pagination.value ||
+          showPaginationInfo.value ||
+          showSelectedRowsInfo.value)
+      );
+    });
+
+    const tableClasses = computed(() => {
+      let classes = "";
+      if (typeof props.classes.table === "string") {
+        classes += props.classes.table;
+      } else if (isArray(props.classes.table)) {
+        classes += props.classes.table.toString().replace(",", " ");
+      }
+      return classes;
+    });
+
+    const tableWrapperClasses = computed(() =>
+      get(props.classes, "tableWrapper", "table-responsive")
+    );
+
+    const isSelectable = computed(
+      () => checkboxRows.value || rowsSelectable.value
+    );
+
+    const updateGlobalSearch = computed(() =>
+      debounce(updateGlobalSearchHandler, globalSearch.value.searchDebounceRate)
+    );
+
+    const hasUniqueId = computed(() => {
+      cColumns.value.some((column) => {
+        if (get(column, "uniqueId")) {
+          return true;
+        }
+      });
+      return false;
+    });
+
+    const currentPageSelectionCount = computed(() => {
+      let result = [];
+      if (serverMode.value && !hasUniqueId.value) {
+        result = intersectionWith(cRows.value, selectedItems.value, isEqual);
+      } else {
+        result = intersectionBy(
+          cRows.value,
+          selectedItems.value,
+          uniqueId.value
+        );
+      }
+      return result.length;
+    });
+
+    const originalRows = computed(() =>
+      cRows.value.map((row, i) => {
+        row.rowId = i + 1;
+        return row;
+      })
+    );
+
+    const query = ref<TableFilterQuery>({
+      sort: [],
+      filters: [],
+      globalSearch: "",
+    });
+
+    const isSortCaseSensitive = (column: TableColumn) => {
+      return get(column, "sortCaseSensitive", true);
+    };
+
+    const initialSort = () => {
+      cColumns.value
+        .filter((column) => !!column.initialSort)
+        .some((column) => {
+          let result = findIndex(query.value.sort, { id: column.id });
+          if (result === -1) {
+            const initialSortOrder = get(column, "initialSortOrder", "asc");
+            query.value.sort.push({
+              id: column.id,
+              name: column.name,
+              order: initialSortOrder,
+              caseSensitive: isSortCaseSensitive(column),
+            });
+          }
+          if (!multiColumnSort.value) {
+            return true;
+          }
+        });
+    };
+
+    const updateFilter = (payload: any) => {
+      let value =
+        typeof payload.value === "number"
+          ? payload.value.toString()
+          : payload.value;
+
+      let column: TableColumn = payload.column;
+      let filterIndex = findIndex(query.value.filters, {
+        name: column.name,
+      });
+      if (filterIndex === -1 && value !== "") {
+        query.value.filters.push({
+          type: column.filter?.type,
+          name: column.name,
+          text: value.trim(),
+          config: column.filter,
+        });
+      } else if (value === "") {
+        query.value.filters.splice(filterIndex, 1);
+      } else {
+        query.value.filters[filterIndex].text = value.trim();
+      }
+    };
+
+    const isMultiFilterMode = (filter: TableColumnFilter) => {
+      return filter.mode === "multi" && isArray(filter.init?.value);
+    };
+
+    const isSingleFilterMode = (filter: TableColumnFilter) => {
+      return (
+        filter.mode === "single" &&
+        Number.isInteger(filter.init?.value) &&
+        filter.init?.value > -1
+      );
+    };
+
+    const updateMultiSelectFilter = (payload: any) => {
+      let selectedOptions = payload.selectedOptions;
+      let column: TableColumn = payload.column;
+
+      let filterIndex = findIndex(query.value.filters, {
+        name: column.name,
+      });
+
+      if (filterIndex === -1) {
+        if (selectedOptions.length === 0) {
+          return;
+        }
+        query.value.filters.push({
+          type: column.filter?.type,
+          mode: column.filter?.mode,
+          name: column.name,
+          selectedOptions: selectedOptions,
+          config: column.filter,
+        });
+      } else {
+        if (selectedOptions.length === 0) {
+          query.value.filters.splice(filterIndex, 1);
+        } else {
+          query.value.filters[filterIndex].selectedOptions = selectedOptions;
+        }
+      }
+    };
+
+    const paginateFilter = () => {
+      if (pagination.value) {
+        let start = (currentPage.value - 1) * perPageItems.value;
+        let end = start + perPageItems.value;
+        cRows.value = tempFilteredResults.value.slice(start, end);
+      } else {
+        cRows.value = cloneDeep(tempFilteredResults.value);
+      }
+    };
+
+    const selectAllCheckbox = () => {
+      if (allRowsSelected.value || currentPageSelectionCount.value > 0) {
+        unSelectAllItems();
+        allRowsSelected.value = false;
+      } else {
+        selectAllItems();
+        allRowsSelected.value = true;
+      }
+    };
+
+    const initGlobalSearch = () => {
+      // this.$refs.globalSearch.value = globalSearch.value.init?.value;
+      query.value.globalSearch = globalSearch.value.init?.value;
+    };
+
+    const hasFilter = (column: TableColumn) => {
+      return has(column, "filter.type");
+    };
+
+    const clearFilter = (column: TableColumn) => {
+      let filterIndex = getFilterIndex(column);
+      if (filterIndex !== -1) {
+        query.value.filters.splice(filterIndex, 1);
+      }
+    };
+
+    const getFilterIndex = (column: TableColumn) => {
+      return findIndex(query.value.filters, {
+        name: column.name,
+      });
+    };
+
+    const updateSortQuery = (column: TableColumn) => {
+      let result = findIndex(query.value.sort, {
+        id: column.id,
+      });
+
+      if (result === -1) {
+        if (!multiColumnSort.value) {
+          query.value.sort = [];
+        }
+        query.value.sort.push({
+          id: column.id,
+          name: column.name,
+          order: "asc",
+          caseSensitive: isSortCaseSensitive(column),
+        });
+      } else {
+        query.value.sort[result].order =
+          query.value.sort[result].order == "asc" ? "desc" : "asc";
+      }
+    };
+
+    const isShiftSelection = (shiftKey: boolean, rowIndex: number) => {
+      return (
+        shiftKey === true &&
+        lastSelectedItemIndex.value !== null &&
+        lastSelectedItemIndex.value !== rowIndex
+      );
+    };
+
+    const handleAddRow = (payload: any) => {
+      let row = cRows.value[payload.rowIndex];
+      if (isShiftSelection(payload.shiftKey, payload.rowIndex)) {
+        let rows = getShiftSelectionRows(payload.rowIndex);
+        rows.forEach((_row: any) => {
+          addSelectedItem(_row);
+        });
+      } else {
+        addSelectedItem(row);
+      }
+
+      emit("selectRow", {
+        selectedItems: cloneDeep(selectedItems.value),
+        selectedItem: row,
+      });
+
+      let difference = [];
+
+      if (serverMode.value && !hasUniqueId.value) {
+        difference = differenceWith(cRows.value, selectedItems.value, isEqual);
+      } else {
+        difference = differenceBy(
+          cRows.value,
+          selectedItems.value,
+          uniqueId.value
+        );
+      }
+
+      allRowsSelected.value = difference.length === 0;
+      lastSelectedItemIndex.value = payload.rowIndex;
+    };
+
+    const getActionButtonClass = (action: any): string => {
+      return get(action, "class", " btn-secondary");
+    };
+
+    const handleRemoveRow = (payload: any) => {
+      let row = cRows.value[payload.rowIndex];
+      if (isShiftSelection(payload.shiftKey, payload.rowIndex)) {
+        let rows = getShiftSelectionRows(payload.rowIndex);
+        rows.forEach((_row: any) => {
+          removeSelectedItem(_row);
+        });
+      } else {
+        removeSelectedItem(row);
+      }
+      emit("unselectRow", {
+        selectedItems: cloneDeep(selectedItems.value),
+        unselectedItem: row,
+      });
+      // EventBus.$emit('unselect-select-all-items-checkbox');
+      allRowsSelected.value = false;
+      lastSelectedItemIndex.value = payload.rowIndex;
+    };
+
+    const addSelectedItem = (item: any) => {
+      let index = -1;
+      if (serverMode.value && !hasUniqueId.value) {
+        index = findIndex(selectedItems.value, (selectedItem) => {
+          return isEqual(selectedItem, item);
+        });
+      } else {
+        index = findIndex(selectedItems.value, (selectedItem) => {
+          return selectedItem[uniqueId.value] == item[uniqueId.value];
+        });
+      }
+
+      if (index == -1) {
+        selectedItems.value.push(item);
+      }
+    };
+
+    const selectAllItems = () => {
+      const difference =
+        serverMode.value && !hasUniqueId.value
+          ? differenceWith(cRows.value, selectedItems.value, isEqual)
+          : differenceBy(cRows.value, selectedItems.value, uniqueId.value);
+
+      selectedItems.value.push(...difference);
+
+      emit("selectAllRows", {
+        selectedItems: cloneDeep(selectedItems.value),
+      });
+    };
+
+    const unSelectAllItems = () => {
+      let difference = [];
+
+      if (serverMode.value && !hasUniqueId.value) {
+        const result = intersectionWith(
+          cRows.value,
+          selectedItems.value,
+          isEqual
+        );
+        difference = differenceWith(selectedItems.value, result, isEqual);
+      } else {
+        const result = intersectionBy(
+          cRows.value,
+          selectedItems.value,
+          uniqueId.value
+        );
+        difference = differenceBy(selectedItems.value, result, uniqueId.value);
+      }
+
+      selectedItems.value = difference;
+
+      emit("unselectAllRows", {
+        selectedItems: cloneDeep(selectedItems.value),
+      });
+    };
+
+    const removeSelectedItem = (item: any) => {
+      selectedItems.value.some((selectedItem, index) => {
+        if (isEqual(item, selectedItem)) {
+          selectedItems.value.splice(index, 1);
+          return true;
+        }
+      });
+    };
+
+    const getShiftSelectionRows = (rowIndex: number) => {
+      let start = 0;
+      let end = 0;
+      if (lastSelectedItemIndex.value < rowIndex) {
+        start = lastSelectedItemIndex.value;
+        end = rowIndex + 1;
+      } else if (lastSelectedItemIndex.value > rowIndex) {
+        start = rowIndex;
+        end = lastSelectedItemIndex.value + 1;
+      }
+      return cRows.value.slice(start, end);
+    };
+
+    const resetSort = () => {
+      query.value.sort = [];
+      filter(!preservePageOnDataChange.value);
+    };
+
+    const updateGlobalSearchHandler = (value: any) => {
+      query.value.globalSearch = value;
+    };
+
+    const clearGlobalSearch = () => {
+      query.value.globalSearch = "";
+      // this.$refs.globalSearch.value = "";
+    };
+
+    const resetQuery = () => {
+      query.value = {
+        sort: [],
+        filters: [],
+        globalSearch: "",
+      };
+
+      // globalSearch.value.visibility && (this.$refs.globalSearch.value = "");
+
+      emit("resetQuery");
+    };
+
+    const sort = () => {
+      if (query.value.sort.length !== 0) {
+        let orders = query.value.sort.map((sortConfig) => sortConfig.order);
+        tempFilteredResults.value = orderBy(
+          tempFilteredResults.value,
+          query.value.sort.map((sortConfig) => {
+            return (row) => {
+              let value = get(row, sortConfig.name);
+              if (sortConfig.caseSensitive) return value !== null ? value : "";
+              return value !== null ? value.toString().toLowerCase() : "";
+            };
+          }),
+          orders
+        );
+      }
+      paginateFilter();
+    };
+
+    const initFilterQueries = () => {
+      cColumns.value && cColumns.value.forEach((column) => {
+        if (!column.filter || !column.filter.init?.value) return;
+
+        if (column.filter.type == "simple") {
+          updateFilter({
+            value: column.filter.init.value,
+            column: column,
+          });
+        } else if (column.filter.type == "select") {
+          let initialValues: any[] = [];
+          if (isMultiFilterMode(column.filter)) {
+            initialValues = column.filter.init.value;
+          } else if (isSingleFilterMode(column.filter)) {
+            initialValues = [column.filter.init.value];
+          }
+
+          let selectedOptions =
+            column.filter?.options &&
+            column.filter?.options
+              .filter((_, index) => initialValues.includes(index))
+              .map((option) => option.value);
+
+          updateMultiSelectFilter({
+            selectedOptions: selectedOptions,
+            column: column,
+          });
+        }
+      });
+    };
+
+    const searchGlobally = (rows: any[]) => {
+      let globalSearchResults = rows.filter((row) => {
+        let flag = false;
+
+        cColumns.value.some((column, key) => {
+          let value: string = get(row, column.name, "");
+          let globalSearchText = query.value.globalSearch;
+
+          if (!globalSearch.value.caseSensitive) {
+            value = value.toLowerCase();
+            globalSearchText = globalSearchText.toLowerCase();
+          }
+
+          if (value.indexOf(globalSearchText) > -1) {
+            flag = true;
+            return;
+          }
+        });
+
+        return flag;
+      });
+
+      return globalSearchResults;
+    };
+
+    const simpleFilter = (
+      value: string,
+      filterText: string,
+      config: GlobalSearchConfig
+    ) => {
+      if (!get(config, "caseSensitive", false)) {
+        value = value.toLowerCase();
+        filterText = filterText.toLowerCase();
+      }
+      return value.indexOf(filterText) > -1;
+    };
+
+    const multiSelectFilter = (
+      value: string,
+      selectedOptions: any[],
+      config: GlobalSearchConfig
+    ) => {
+      value = value.toLowerCase();
+
+      selectedOptions = selectedOptions.map((option) => {
+        return typeof option !== "string"
+          ? option.toString().toLowerCase()
+          : option.toLowerCase();
+      });
+      return selectedOptions.includes(value);
+    };
+
+    const isSortableColumn = (column: TableColumn) => {
+      return !!get(column, "sort");
+    };
+
+    const getValueFromRow = (row: any, name: string) => {
+      return get(row, name);
+    };
+
+    const getCellSlotName = (column: TableColumn) => {
+      return get(column, "slotName") || column.name.replace(/\./g, "_");
+    };
+
+    const emitQueryParams = (page = null as null | number) => {
+      if (serverMode.value && canEmitQueries.value) {
+        let queryParams = cloneDeep(query.value);
+        let sort = queryParams.sort.map((o) => omit(o, "id"));
+        let filters = queryParams.filters.map((o) => omit(o, "config"));
+        let globalSearch = queryParams.globalSearch;
+        let itemsPerPage = clone(perPageItems.value);
+
+        if (page === null) {
+          if (preservePageOnDataChange.value) {
+            page = currentPage.value;
+          } else {
+            currentPage.value = 1;
+            page = 1;
+          }
+        }
+        let payload = {
+          sort: sort,
+          filters: filters,
+          globalSearch: globalSearch,
+          perPageItems: itemsPerPage,
+          currentPage: page,
+        };
+        emit("changeQuery", payload);
+      }
+    };
+
+    const columnClasses = (column: TableColumn) => {
+      let classes = "";
+      const alignments = [
+        "text-justify",
+        "text-right",
+        "text-left",
+        "text-center",
+      ];
+      classes +=
+        column.columnTextAlignment &&
+        alignments.includes(column.columnTextAlignment)
+          ? column.columnTextAlignment
+          : "text-center";
+
+      if (has(column, "columnClasses")) {
+        classes = classes + " " + column.columnClasses;
+      }
+      if (isSortableColumn(column)) {
+        classes = classes + " sort-cursor";
+      }
+
+      return classes;
+    };
+
+    const handleShiftKey = () => {
+      ["keyup", "keydown"].forEach((event) => {
+        window.addEventListener(event, (e: any) => {
+          document.onselectstart = function () {
+            return !(e.key === "Shift" && e.shiftKey === true);
+          };
+        });
+      });
+    };
+
+    const emitActionEvent = (action: TableActionsBtn) => {
+      let payload: Record<string, any> = {
+        eventPayload: cloneDeep(action.eventPayload),
+      };
+
+      if (isSelectable.value) {
+        payload.selectedItems = cloneDeep(selectedItems.value);
+      }
+
+      emit(action.eventName, payload);
+    };
+
+    const canShowColumn = (column: TableColumn) => {
+      return get(column, "visibility", true);
+    };
+
+    const filter = (resetPage = true, isInit = false) => {
+      let res = originalRows.value.filter((row) => {
+        let flag = true;
+        query.value.filters.some((filter, key) => {
+          if (filter.type === "simple") {
+            if (
+              simpleFilter(get(row, filter.name), filter.text, filter.config)
+            ) {
+              // continue to next filter
+              flag = true;
+            } else {
+              // stop here and break loop since one filter has failed
+              flag = false;
+              return true;
+            }
+          } else if (filter.type === "select") {
+            if (
+              multiSelectFilter(
+                get(row, filter.name),
+                filter.selected_options,
+                filter.config
+              )
+            ) {
+              flag = true;
+            } else {
+              flag = false;
+              return true;
+            }
+          } else if (filter.type === "custom") {
+            let index = findIndex(cColumns.value, { name: filter.name });
+            if (index > -1) {
+              let column = cColumns.value[index];
+              if (column.filter?.validator) {
+                let result = column.filter.validator(
+                  get(row, filter.name),
+                  filter.text
+                );
+                if (result == true || result == undefined) {
+                  flag = true;
+                } else {
+                  flag = false;
+                  return true;
+                }
+              } else {
+                flag = true;
+              }
+            } else {
+              flag = true;
+            }
+          }
+        });
+        return flag;
+      });
+
+      tempFilteredResults.value = res;
+      if (query.value.globalSearch !== "" && !!totalFilteredRows.value) {
+        tempFilteredResults.value = searchGlobally(tempFilteredResults.value);
+      }
+
+      sort();
+      if (resetPage || totalFilteredRows.value === 0) {
+        currentPage.value = 1;
+      } else if (!isInit) {
+        let newTotalPage = Math.ceil(
+          totalFilteredRows.value / perPageItems.value
+        );
+        currentPage.value =
+          currentPage.value <= newTotalPage ? currentPage.value : newTotalPage;
+      }
+    };
+
+    watch(
+      [query.value.filters, query.value.globalSearch],
+      () => {
+        if (!serverMode.value) {
+          filter(!preservePageOnDataChange.value);
+        }
+      },
+      { deep: true }
+    );
+
+    watch(
+      query.value.sort,
+      () => {
+        if (!serverMode.value) {
+          sort();
+        }
+      },
+      { deep: true }
+    );
+
+    watch(query, () => {
+      if (serverMode.value) emitQueryParams(), { deep: true };
+    });
+
+    watch(perPageItems, () => {
+      if (!serverMode.value) {
+        let doPaginateFilter = currentPage.value === 1;
+        if (!preservePageOnDataChange.value) currentPage.value = 1;
+        if (doPaginateFilter) {
+          paginateFilter();
+        }
+      } else {
+        emitQueryParams();
+      }
+    });
+
+    watch(pagination, () => {
+      if (!serverMode.value) {
+        paginateFilter();
+      } else {
+        emitQueryParams();
+      }
+    });
+
+    watch(
+      () => props.rows,
+      () => {
+        if (!serverMode.value) {
+          filter(!preservePageOnDataChange.value, !isFirstTime.value);
+        } else {
+          if (preservePageOnDataChange.value) {
+            let predictedTotalPage = Math.ceil(
+              totalFilteredRows.value / perPageItems.value
+            );
+            if (predictedTotalPage !== 0) {
+              currentPage.value =
+                currentPage.value <= predictedTotalPage
+                  ? currentPage.value
+                  : predictedTotalPage;
+            } else {
+              currentPage.value = 1;
+            }
+          }
+        }
+        isFirstTime.value = false;
+      },
+      {
+        deep: true,
+      }
+    );
+
+    watch(
+      () => props.customFilters,
+      (newVal) => {
+        if (!serverMode.value && newVal) {
+          newVal.forEach((customFilter: any) => {
+            if (customFilter.name) {
+              let index = query.value.filters.findIndex(
+                (filter) => filter.name === customFilter.name
+              );
+              if (index === -1) {
+                query.value.filters.push(customFilter);
+              } else {
+                query.value.filters[index].text = customFilter.text;
+              }
+            }
+          });
+        }
+      },
+      { deep: true }
+    );
+
+    watch(
+      () => props.columns,
+      () => initFilterQueries(),
+      {
+        deep: true,
+      }
+    );
+
+    watch(
+      cRows,
+      (newVal) => {
+        lastSelectedItemIndex.value = -1;
+
+        if (selectedItems.value.length === 0) {
+          allRowsSelected.value = false;
+          return;
+        }
+
+        let difference =
+          serverMode.value && !hasUniqueId.value
+            ? differenceWith(newVal, selectedItems.value, isEqual)
+            : differenceBy(newVal, selectedItems.value, uniqueId.value);
+
+        allRowsSelected.value = difference.length === 0;
+      },
+      { deep: true }
+    );
+
+    watch(currentPage, (newVal, oldVal) => {
+      if (!serverMode.value) {
+        paginateFilter();
+      } else {
+        emitQueryParams(newVal);
+      }
+    });
+
+    watch(
+      () => props.config.multiColumnSort,
+      () => resetSort()
+    );
+
+    onMounted(() => {
+      initialSort();
+      initFilterQueries();
+      if (globalSearch.value.visibility) {
+        nextTick(() => {
+          initGlobalSearch();
+        });
+      }
+
+      nextTick(() => {
+        if (!serverMode.value) {
+          filter(false, true);
+        } else {
+          canEmitQueries.value = true;
+          emitQueryParams();
+        }
+      });
+
+      handleShiftKey();
+    });
+
+    return {
+      closeCircle,
+      cRows,
+      cColumns,
+      query,
+      uniqueId,
+      currentPage,
+      perPageItems,
+      selectedItems,
+      allRowsSelected,
+      cardTitle,
+      cardMode,
+      serverMode,
+      loaderText,
+      checkboxRows,
+      rowsSelectable,
+      multiColumnSort,
+      showPaginationInfo,
+      highlightRowHover,
+      highlightRowHoverColor,
+      showSelectedRowsInfo,
+      showRefreshButton,
+      showResetButton,
+      preservePageOnDataChange,
+      tableWrapperClasses,
+      tableClasses,
+      showToolsRow,
+      headerColSpan,
+      pagination,
+      visibleButtons,
+      perPageOptions,
+      globalSearch,
+      totalSelectedItems,
+      totalOriginalRows,
+      totalFilteredRows,
+      currentPageSelectionCount,
+      isSelectable,
+      showPaginationRow,
+      showFilterRow,
+      updateGlobalSearch,
+      getProperty: get,
+      getCellSlotName,
+      handleRemoveRow,
+      handleAddRow,
+      clearFilter,
+      updateMultiSelectFilter,
+      updateGlobalSearchHandler,
+      updateFilter,
+      hasFilter,
+      canShowColumn,
+      isSortableColumn,
+      columnClasses,
+      updateSortQuery,
+      selectAllCheckbox,
+      emitActionEvent,
+      getActionButtonClass,
+      resetQuery,
+      clearGlobalSearch,
+    };
+  },
+  components: {
+    TableRow,
+    SelectAllRowsCheckBox,
+    SimpleFilter,
+    MultiSelect,
+    SortIcon,
+    Pagination,
+  },
+});
+</script>
+
+<style scoped>
+.table-wrapper {
+  position: relative;
+}
+
+/*
+    Loader styles copied from here: https://loading.io/css/
+    */
+
+.lds-ripple {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.lds-ripple div {
+  position: absolute;
+  border: 4px solid #000000;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
+  0% {
+    top: 28px;
+    left: 28px;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    top: -1px;
+    left: -1px;
+    width: 58px;
+    height: 58px;
+    opacity: 0;
+  }
+}
+
+.table-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  position: absolute;
+  opacity: 0.7;
+  z-index: 7777;
+}
+
+.table-loader-wrapper {
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+
+.table-loader-wrapper .progress {
+  margin-left: 40%;
+  margin-right: 40%;
+}
+
+.select-all-checkbox {
+  margin-bottom: 20px;
+}
+
+.sort-cursor {
+  cursor: pointer;
+}
+.custom-control-label {
+  vertical-align: top;
+}
+.column-header {
+  -webkit-user-select: none; /* Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Likely future */
+}
+.global-search-clear {
+  cursor: pointer;
+}
+input[type="search"] {
+  -webkit-appearance: searchfield;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: searchfield-cancel-button;
+}
+
+/* Bootstrap 4 text input with clear icon on the right */
+
+.has-clear-right {
+  position: relative;
+}
+
+.has-clear-right .form-control {
+  padding-right: 2.375rem;
+}
+
+.has-clear-right .form-control-feedback {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: block;
+  width: 2.375rem;
+  height: 2.375rem;
+  line-height: 2.375rem;
+  text-align: center;
+  font-weight: normal;
+}
+
+.has-clear-right .form-control-feedback:hover {
+  color: red;
+}
+</style>
+
+
+// workflow - server
+// get data(payload)
+// clone to origin_rows
+// do filter
+// do global search
+// do sort
+// do paginate
