@@ -1,10 +1,13 @@
 <template>
-  <div class="text-right justify-content-center">
-    <template v-if="currentPageRowsLength != 0">
-      From 1 to {{ currentPageRowsLength }} of {{ filteredRowsLength }} entries
+  <div class="pagination-info">
+    <template v-if="totalRows !== 0">
+      From 1 to {{ totalRows }} of {{ totalFilteredRows }} entries
     </template>
     <template v-else> No results found </template>
-    <template> ({{ originalRowsLength }} total records) </template>
+    <template> ({{ totalOriginalRows }} total records) </template>
+    <template v-if="showSelectedRowsInfo">
+      &nbsp;|&nbsp; {{ totalSelectedItems }} rows selected
+    </template>
   </div>
 </template>
 
@@ -13,18 +16,33 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   props: {
-    currentPageRowsLength: {
+    totalRows: {
       type: Number,
       default: 0,
     },
-    filteredRowsLength: {
+    totalFilteredRows: {
       type: Number,
       default: 0,
     },
-    originalRowsLength: {
+    totalOriginalRows: {
+      type: Number,
+      default: 0,
+    },
+    showSelectedRowsInfo: {
+      type: Boolean,
+      default: false,
+    },
+    totalSelectedItems: {
       type: Number,
       default: 0,
     },
   },
 });
 </script>
+
+<style scoped>
+.pagination-info {
+  text-align:right;
+  margin-right: .7rem;
+}
+</style>

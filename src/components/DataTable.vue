@@ -323,60 +323,28 @@
     </div>
     <div class="card-footer" v-if="cardMode">
       <slot name="card-footer">
-        <div class="row">
-          <!-- pagination starts here -->
-          <div class="col-md-6">
-            <div v-if="pagination">
-              <Pagination
-                v-model:currentPage="currentPage"
-                v-model:perPageItems="perPageItems"
-                :perPageOptions="perPageOptions"
-                :total="totalFilteredRows"
-                :visibleButtons="visibleButtons"
-              >
-                <template slot="paginataion-previous-button">
-                  <slot name="paginataion-previous-button"> &laquo; </slot>
-                </template>
-                <template slot="paginataion-next-button">
-                  <slot name="paginataion-next-button"> &raquo; </slot>
-                </template>
-              </Pagination>
-            </div>
-          </div>
-          <!-- pagination ends here -->
-
-          <!-- pagination info start here -->
-          <div class="col-md-6">
-            <div class="text-right justify-content-center">
-              <template v-if="showPaginationInfo">
-                <slot
-                  name="pagination-info"
-                  :totalRows="totalRows"
-                  :totalFilteredRows="totalFilteredRows"
-                  :totalOriginalRows="totalOriginalRows"
-                >
-                  <template v-if="totalRows != 0">
-                    From 1 to {{ totalRows }} of {{ totalFilteredRows }} entries
-                  </template>
-                  <template v-else> No results found </template>
-                  <template> ({{ totalOriginalRows }} total records) </template>
-                </slot>
-              </template>
-              <template v-if="showPaginationInfo && showSelectedRowsInfo">
-                <slot name="pagination-selected-rows-separator"> | </slot>
-              </template>
-              <template v-if="showSelectedRowsInfo">
-                <slot
-                  name="selected-rows-info"
-                  :totalSelectedItems="totalSelectedItems"
-                >
-                  {{ totalSelectedItems }} rows selected
-                </slot>
-              </template>
-            </div>
-          </div>
-          <!-- pagination info ends here -->
-        </div>
+        <ion-row>
+          <ion-col size-md="6">
+            <pagination
+              v-if="pagination"
+              :currentPage="currentPage"
+              :perPageItems="perPageItems"
+              :perPageOptions="perPageOptions"
+              :total="totalFilteredRows"
+              :visibleButtons="visibleButtons"
+            />
+          </ion-col>
+          <ion-col>
+            <PaginationInfo 
+              v-if="showPaginationInfo"
+              :totalRows="totalRows"
+              :totalFilteredRows="totalFilteredRows"
+              :totalOriginalRows="totalOriginalRows"
+              :showSelectedRowsInfo="showSelectedRowsInfo"
+              :totalSelectedItems="totalSelectedItems"
+            />
+          </ion-col>
+        </ion-row>
       </slot>
     </div>
   </div>
@@ -403,6 +371,7 @@ import TableRow from "./TableRow.vue";
 import SelectAllRowsCheckBox from "./SelectAllRowsCheckBox.vue";
 import SortIcon from "./SortIcon.vue";
 import Pagination from "./CustomPagination.vue";
+import PaginationInfo from "./PaginationInfo.vue";
 import SimpleFilter from "./filters/SimpleFilter.vue";
 import MultiSelect from "./filters/MultiSelect.vue";
 import {
@@ -1453,6 +1422,7 @@ export default defineComponent({
     MultiSelect,
     SortIcon,
     Pagination,
+    PaginationInfo,
   },
 });
 </script>

@@ -1,109 +1,79 @@
 <template>
-  <div>
-    <nav aria-label="Page navigation example">
-      <ul class="pagination">
-        <li
-          :class="{ disabled: disablePreviousButton }"
-          class="page-item"
-          @click.prevent="pageHandler(currentPage - 1)"
+  <div class="pagination">
+    <div class="btn-group">
+      <ion-button
+        color="light"
+        :disabled="disablePreviousButton"
+        @click.prevent="pageHandler(currentPage - 1)"
+        aria-label="Previous"
+      >
+        &laquo;
+      </ion-button>
+      <template v-if="isEmpty">
+        <span disabled>...</span>
+      </template>
+      <template v-else>
+        <ion-button
+          v-if="start > 3"
+          color="light"
+          @click.prevent="pageHandler(1)"
         >
-          <a class="page-link" href="" aria-label="Previous">
-            <span aria-hidden="true">
-              <slot name="paginataion-previous-button"> </slot>
-            </span>
-          </a>
-        </li>
-        <template v-if="!isEmpty">
-          <li
-            class="page-item"
-            v-if="start > 3"
-            @click.prevent="pageHandler(1)"
-          >
-            <a class="page-link" href=""> 1 </a>
-          </li>
-          <li class="page-item disabled" v-if="start > 3">
-            <a class="page-link" href="">…</a>
-          </li>
-          <li
-            class="page-item"
-            v-for="index in range"
+          1
+        </ion-button>
+        <span v-if="start > 3" disabled>...</span>
+        <ion-button
+          v-for="index in range"
+          :key="index"
+          :color="index === currentPage ? 'primary' : 'light'"
+          @click.prevent="pageHandler(index)"
+        >
+          {{ index }}
+        </ion-button>
+        <span v-if="end < totalPages - 2" disabled>...</span>
+        <ion-button
+          v-if="end < totalPages - 2"
+          color="light"
+          @click.prevent="pageHandler(totalPages)"
+        >
+          {{ totalPages }}
+        </ion-button>
+      </template>
+      <ion-button
+        color="light"
+        :disabled="disableNextButton"
+        @click.prevent="pageHandler(currentPage + 1)"
+        aria-label="Next"
+      >
+        <span aria-hidden="true">&raquo;</span>
+      </ion-button>
+    </div>
+    <div class="page-filters">
+      <div class="filter-item">
+        <ion-label>items per page: </ion-label>
+        <select class="per-page-options">
+          <option
+            v-for="(option, index) in perPageOptions"
             :key="index"
-            v-bind:class="{ active: index == currentPage }"
-            @click.prevent="pageHandler(index)"
+            :value="option"
+            :selected="option === perPageItems"
+            @click.prevent="perPageHandler(option)"
           >
-            <a class="page-link" href="">{{ index }}</a>
-          </li>
-          <li class="page-item disabled" v-if="end < totalPages - 2">
-            <a class="page-link" href="">…</a>
-          </li>
-          <li
-            class="page-item"
-            v-if="end < totalPages - 2"
-            @click.prevent="pageHandler(totalPages)"
-          >
-            <a class="page-link" href=""> {{ totalPages }} </a>
-          </li>
-        </template>
-
-        <template v-else>
-          <li class="page-item disabled">
-            <a class="page-link" href="">…</a>
-          </li>
-        </template>
-        <li
-          :class="{ disabled: disableNextButton }"
-          class="page-item"
-          @click.prevent="pageHandler(currentPage + 1)"
-        >
-          <a class="page-link" href="" aria-label="Next">
-            <span aria-hidden="true">
-              <slot name="paginataion-next-button"> </slot>
-            </span>
-          </a>
-        </li>
-        <!-- Number of rows per page starts here -->
-        <div class="dropdown show per-page-dropdown">
-          <a
-            class="btn btn-primary dropdown-toggle"
-            href="#"
-            role="button"
-            id="dropdownMenuLink"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            {{ perPage }}
-          </a>
-
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-            <a
-              v-for="(option, key, index) in perPageOptions"
-              :key="index"
-              class="dropdown-item"
-              href=""
-              @click.prevent="perPageHandler(option)"
-              v-bind:class="{ active: option == perPage }"
-            >
-              {{ option }}
-            </a>
-          </div>
-        </div>
-        <!-- Number of rows per page ends here -->
-
-        <div class="input-group col-sm-2">
-          <input
-            type="number"
-            class="form-control"
-            min="1"
-            step="1"
-            :max="totalPages"
-            placeholder="Go to page"
-            @keyup.enter="goToPage"
-            v-model.number="pageToGo"
-          />
-        </div>
-      </ul>
-    </nav>
+            {{ option }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <ion-label>Go to page: </ion-label>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          :max="totalPages"
+          @keyup.enter="goToPage"
+          v-model.number="pageToGo"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -143,14 +113,18 @@ export default defineComponent({
   },
   emits: ["update:currentPage", "update:perPageItems"],
   setup(props, { emit }) {
-    const start = ref(props.currentPage + 0);
+    const start = ref(props.currentPage);
     const end = ref(0);
     const pageToGo = ref(0);
-    const disablePreviousButton = computed(() => props.currentPage === start.value);
+    const disablePreviousButton = computed(() => {
+      return props.currentPage === start.value;
+    });
     const disableNextButton = computed(() => props.currentPage === end.value);
-    const isEmpty = () => computed(() => props.total == 0);
+    const isEmpty = computed(() => props.total === 0);
     const range = computed(() => generateRange(start.value, end.value + 1));
-    const totalPages = computed(() => Math.ceil(props.total / props.perPageItems));
+    const totalPages = computed(() =>
+      Math.ceil(props.total / props.perPageItems)
+    );
     const perPageHandler = (option: any) => emit("update:perPageItems", option);
     const pageHandler = (index: number) => {
       if (index >= 1 && index <= totalPages.value) {
@@ -173,7 +147,8 @@ export default defineComponent({
       //Skip recalculating if the previous and next pages are already visible
       if (
         !force &&
-        (range.value.includes(props.currentPage - 1) || props.currentPage === 1) &&
+        (range.value.includes(props.currentPage - 1) ||
+          props.currentPage === 1) &&
         (range.value.includes(props.currentPage + 1) ||
           props.currentPage === totalPages.value)
       ) {
@@ -181,7 +156,7 @@ export default defineComponent({
       }
 
       //Current page is the start page minus one
-      start.value = props.currentPage == 1 ? 1 : props.currentPage - 1;
+      start.value = props.currentPage === 1 ? 1 : props.currentPage - 1;
 
       //Reserved entries: firstpage, ellipsis (2x), prev. page, last page, current page
       end.value = start.value + props.visibleButtons - 5;
@@ -226,10 +201,28 @@ export default defineComponent({
 </script>
 
 <style scoped>
-ul.pagination {
-  margin-bottom: 0;
+.pagination {
+  display: flex;
+  justify-content: flex-start;
+  justify-items: center;
 }
-.per-page-dropdown {
-  margin-left: 8px;
+.pagination .btn-group,
+.pagination .page-filters .filter-item {
+  margin: 0.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pagination ion-button {
+  margin: 0.1rem;
+}
+
+.pagination .page-filters {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0.5rem;
+}
+h6 {
+  margin-right: 0.5rem;
 }
 </style>

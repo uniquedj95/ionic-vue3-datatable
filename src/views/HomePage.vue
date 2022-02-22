@@ -2,7 +2,7 @@
   <ion-page translucent>
     <ion-header color="light">
       <ion-toolbar>
-        <ion-title>Daniel Justin Ionic Datatable Example</ion-title>
+        <ion-title>Ionic Vue 3 Datatables</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
@@ -106,7 +106,7 @@ export default defineComponent({
       rowsSelectable: true,
       multiColumnSort: false,
       // highlight_row_hover_color:"grey",
-      cardTitle: "Ionic Vue 3 advanced table",
+      cardTitle: "Example datatable",
       globalSearch: {
         placeholder: "Enter custom Search text",
         visibility: true,
@@ -135,7 +135,7 @@ export default defineComponent({
       loader.present()
       setTimeout(() => {
         const users: any[] = [];
-        for(let i = 1; i < 300; i++) {
+        for(let i = 1; i < 30; i++) {
           users.push({
             id: i,
             firstName: `firstname${i}`
