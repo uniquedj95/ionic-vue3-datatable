@@ -247,73 +247,28 @@
             <!-- Pagination row starts here -->
             <tr v-if="showPaginationRow" class="footer-pagination-row">
               <td :colspan="headerColSpan">
-                <div class="row pagination-row no-gutters">
-                  <!-- pagination starts here -->
-                  <div class="col-md-8">
-                    <div v-if="pagination">
-                      <Pagination
-                        v-model:currentPage="currentPage"
-                        v-model:perPageItems="perPageItems"
-                        :perPageOptions="perPageOptions"
-                        :total="totalFilteredRows"
-                        :visibleButtons="visibleButtons"
-                      >
-                        <template slot="paginataion-previous-button">
-                          <slot name="paginataion-previous-button">
-                            &laquo;
-                          </slot>
-                        </template>
-                        <template slot="paginataion-next-button">
-                          <slot name="paginataion-next-button"> &raquo; </slot>
-                        </template>
-                      </Pagination>
-                    </div>
-                  </div>
-                  <!-- pagination ends here -->
-
-                  <!-- pagination info start here -->
-                  <div class="col-md-4">
-                    <div class="text-right justify-content-center">
-                      <template v-if="showPaginationInfo">
-                        <slot
-                          name="pagination-info"
-                          :totalRows="totalRows"
-                          :totalFilteredRows="totalFilteredRows"
-                          :totalOriginalRows="totalOriginalRows"
-                        >
-                          <template v-if="totalRows != 0">
-                            From 1 to {{ totalRows }} of
-                            {{ totalFilteredRows }} entries
-                          </template>
-                          <template v-else> No results found </template>
-                          <template>
-                            ({{ totalOriginalRows }} total records)
-                          </template>
-                        </slot>
-                      </template>
-                      <template
-                        v-if="
-                          showSelectedRowsInfo &&
-                          showPaginationInfo &&
-                          isSelectable
-                        "
-                      >
-                        <slot name="pagination-selected-rows-separator">
-                          |
-                        </slot>
-                      </template>
-                      <template v-if="showSelectedRowsInfo && isSelectable">
-                        <slot
-                          name="selected-rows-info"
-                          :totalSelectedItems="totalSelectedItems"
-                        >
-                          {{ totalSelectedItems }} rows selected
-                        </slot>
-                      </template>
-                    </div>
-                  </div>
-                  <!-- pagination info ends here -->
-                </div>
+                <ion-row>
+                  <ion-col size-md="8">
+                    <pagination
+                      v-if="pagination"
+                      :currentPage="currentPage"
+                      :perPageItems="perPageItems"
+                      :perPageOptions="perPageOptions"
+                      :total="totalFilteredRows"
+                      :visibleButtons="visibleButtons"
+                    />
+                  </ion-col>
+                  <ion-col size-md="4">
+                    <PaginationInfo 
+                      v-if="showPaginationInfo"
+                      :totalRows="totalRows"
+                      :totalFilteredRows="totalFilteredRows"
+                      :totalOriginalRows="totalOriginalRows"
+                      :showSelectedRowsInfo="showSelectedRowsInfo"
+                      :totalSelectedItems="totalSelectedItems"
+                    />
+                  </ion-col>
+                </ion-row>
               </td>
             </tr>
             <!-- Pagination ends starts here -->
@@ -334,7 +289,7 @@
               :visibleButtons="visibleButtons"
             />
           </ion-col>
-          <ion-col>
+          <ion-col size-md="6">
             <PaginationInfo 
               v-if="showPaginationInfo"
               :totalRows="totalRows"
@@ -1026,11 +981,7 @@ export default defineComponent({
       return value.indexOf(filterText) > -1;
     };
 
-    const multiSelectFilter = (
-      value: string,
-      selectedOptions: any[],
-      config: GlobalSearchConfig
-    ) => {
+    const multiSelectFilter = (value: string, selectedOptions: any[]) => {
       value = value.toLowerCase();
 
       selectedOptions = selectedOptions.map((option) => {
@@ -1043,10 +994,6 @@ export default defineComponent({
 
     const isSortableColumn = (column: TableColumn) => {
       return !!get(column, "sort");
-    };
-
-    const getValueFromRow = (row: any, name: string) => {
-      return get(row, name);
     };
 
     const getCellSlotName = (column: TableColumn) => {
@@ -1149,8 +1096,7 @@ export default defineComponent({
             if (
               multiSelectFilter(
                 get(row, filter.name),
-                filter.selected_options,
-                filter.config
+                filter.selected_options
               )
             ) {
               flag = true;
@@ -1379,6 +1325,7 @@ export default defineComponent({
       showRefreshButton,
       showResetButton,
       preservePageOnDataChange,
+      totalFilteredResults,
       tableWrapperClasses,
       tableClasses,
       showToolsRow,
@@ -1391,6 +1338,7 @@ export default defineComponent({
       totalOriginalRows,
       totalFilteredRows,
       currentPageSelectionCount,
+      isResponsive,
       isSelectable,
       showPaginationRow,
       showFilterRow,
