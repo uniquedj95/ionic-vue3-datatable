@@ -74,7 +74,28 @@ export default defineComponent({
       },
       {
         label: "First Name",
-        name: "name.first_name",
+        name: "firstName",
+        filter: {
+          type: "select",
+          placeholder: "Select first name",
+          options: [],
+          mode: "multi",
+          closeDropdownOnSelection: true,
+          selectAllCheckbox: {
+            visibility: true,
+            text: "Select all",
+          },
+          init: {
+            value: [244],
+          },
+        },
+        sort: true,
+        initialSort: false,
+        sortCaseSensitive: false,
+      },
+      {
+        label: "Last Name",
+        name: "lastName",
         filter: {
           type: "select",
           placeholder: "Select first name",
@@ -138,7 +159,8 @@ export default defineComponent({
         for(let i = 1; i < 30; i++) {
           users.push({
             id: i,
-            firstName: `firstname${i}`
+            firstName: `first name${i}`,
+            lastName: `last name${i}`
           })
         }
         rows.value = users
