@@ -1347,7 +1347,7 @@ export default defineComponent({
 
 .bordered-table th,
 .bordered-table td {
-  padding: 10px;
+  padding: 5px;
   border: 1px solid #ddd;
   border-collapse: collapse;
 }
