@@ -6,8 +6,8 @@
       </div>
     </div>
     <div :class="{ 'card-body': cardMode }">
-      <div :class="tableWrapperClasses" class="table-wrapper">
-        <table class="table" :class="tableClasses">
+      <div class="responsive-table" :class="tableWrapperClasses">
+        <table class="table striped-table bordered-table" :class="tableClasses">
           <thead>
             <tr v-if="showToolsRow" class="table-tools">
               <th :colspan="headerColSpan">
@@ -15,7 +15,7 @@
                   <ion-row>
                     <ion-col size-md="4">
                       <ion-row>
-                        <ion-col size-md="6" v-if="globalSearch && globalSearch.visibility">
+                        <ion-col size-md="6" v-if="globalSearch && globalSearch.visibility || true">
                           <div class="form-group has-clear-right" :class="globalSearch.class">
                             <span v-if="globalSearch.showClearButton" class="form-control-feedback global-search-clear" @click="clearGlobalSearch">
                               <ion-icon :icon="closeCircle"></ion-icon>
@@ -1338,8 +1338,26 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.table-wrapper {
-  position: relative;
+.table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+.bordered-table th,
+.bordered-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-collapse: collapse;
+}
+
+.striped-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.responsive-table {
+  overflow-x: auto;
 }
 
 /*
