@@ -182,21 +182,7 @@
           :uniqueId="uniqueId"
           @addRow="handleAddRow"
           @removeRow="handleRemoveRow"
-        >
-          <template
-            v-for="column in columns"
-            :slot="'' + getCellSlotName(column)"
-          >
-            <slot
-              :name="getCellSlotName(column)"
-              :row="row"
-              :column="column"
-              :cellValue="getProperty(row, column.name)"
-            >
-              {{ getProperty(row, column.name) }}
-            </slot>
-          </template>
-        </table-row>
+        ></table-row>
         
         <tr v-show="cRows.length === 0">
           <td :colspan="headerColSpan">
@@ -278,6 +264,7 @@ import {
   TableFilterQuery,
 } from "@/interfaces/datatable";
 import { closeCircle } from "ionicons/icons";
+import { canShowColumn, isSortableColumn } from "@/utils/Table";
 
 export default defineComponent({
   props: {
@@ -919,9 +906,7 @@ export default defineComponent({
       return selectedOptions.includes(value);
     };
 
-    const isSortableColumn = (column: TableColumn) => {
-      return !!get(column, "sort");
-    };
+    
 
     const getCellSlotName = (column: TableColumn) => {
       return get(column, "slotName") || column.name.replace(/\./g, "_");
@@ -998,10 +983,6 @@ export default defineComponent({
       }
 
       emit(action.eventName, payload);
-    };
-
-    const canShowColumn = (column: TableColumn) => {
-      return get(column, "visibility", true);
     };
 
     const filter = (resetPage = true, isInit = false) => {

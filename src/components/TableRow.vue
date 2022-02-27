@@ -4,7 +4,7 @@
     ref="row"
     v-bind:style="{ background: rowHighlighted ? highlightRowHoverColor : '' }"
     :class="rowClasses"
-    v-on="rowsSelectable ? { click: (event) => handleRowSelect(event) } : {}"
+    v-on="rowsSelectable ? { click: (e) => handleRowSelect(e) } : {}"
   >
     <CheckBox
       v-if="checkboxRows"
@@ -19,7 +19,7 @@
         :key="index"
         :class="cellClasses(column)"
       >
-        <slot :name="'' + getCellSlotName(column)"> </slot>
+        {{ row[column.name] }}
       </td>
     </template>
   </tr>
@@ -38,6 +38,7 @@ import {
 import { differenceWith, isEqual, get, isArray, isEmpty } from "lodash";
 import { TableColumn } from "@/interfaces/datatable";
 import useEmitter from "@/composables/useEmitter";
+import { canShowColumn } from "@/utils/Table";
 
 export default defineComponent({
   components: {
@@ -94,7 +95,6 @@ export default defineComponent({
     const emmitter = useEmitter();
     const rowSelected = ref(false);
     const rowHighlighted = ref(false);
-    const canShowColumn = (column: TableColumn) => !!column.visibility;
     const rowHover = (state: boolean) => (rowHighlighted.value = state);
     const rowId = computed(() => get(props.row, props.uniqueId));
     const rowClasses = computed(() => {
