@@ -16,109 +16,82 @@
                     <ion-col size-md="4">
                       <ion-row>
                         <ion-col size-md="6" v-if="globalSearch && globalSearch.visibility">
-                          
+                          <div class="form-group has-clear-right" :class="globalSearch.class">
+                            <span v-if="globalSearch.showClearButton" class="form-control-feedback global-search-clear" @click="clearGlobalSearch">
+                              <ion-icon :icon="closeCircle"></ion-icon>
+                            </span>
+                            <input
+                              v-if="globalSearch.searchOnPressEnter"
+                              ref="globalSearch"
+                              type="text"
+                              class="form-control"
+                              :placeholder="globalSearch.placeholder"
+                              @keyup.enter="
+                                updateGlobalSearchHandler($event.target?.value)
+                              "
+                            />
+                            <input
+                              v-else
+                              ref="globalSearch"
+                              type="text"
+                              class="form-control"
+                              :placeholder="globalSearch.placeholder"
+                              @keyup.stop="
+                                updateGlobalSearch($event.target?.value)
+                              "
+                            />
+                          </div>
+                        </ion-col>
+                        <ion-col size-md="4">
+                          <div
+                            class="btn-group"
+                            role="group"
+                            aria-label="Table Actions buttons"
+                          >
+                            <button
+                              v-if="showRefreshButton"
+                              type="button"
+                              class="btn btn-secondary refresh-button"
+                              @click="$emit('refresh-data')"
+                            >
+                              <slot name="refresh-button-text"> Refresh </slot>
+                            </button>
+                            <button
+                              type="button"
+                              v-if="showResetButton"
+                              class="btn btn-secondary reset-button"
+                              @click="resetQuery"
+                            >
+                              <slot name="reset-button-text"> Reset Query </slot>
+                            </button>
+                          </div>
                         </ion-col>
                       </ion-row>
                     </ion-col>
+                    <ion-col size-md="8">
+                      <slot name="action-buttons">
+                        <div
+                          class="btn-group float-right"
+                          role="group"
+                          aria-label="Basic example"
+                        >
+                          <button
+                            v-for="(action, key, index) in actions"
+                            :key="index"
+                            type="button"
+                            class="btn"
+                            :class="getActionButtonClass(action)"
+                            @click="emitActionEvent(action)"
+                          >
+                            <slot :name="action.label">
+                              <span v-html="action.label"></span>
+                            </slot>
+                          </button>
+                        </div>
+                      </slot>
+                    </ion-col>
                   </ion-row>
                 </ion-grid>
-                <div class="row header-row no-gutters">
-                  <div class="col-md-4">
-                    <div class="row no-gutters">
-                      <div
-                        class="col-md-6 input-group global-search"
-                        v-if="globalSearch.visibility"
-                      >
-                        <div
-                          class="form-group has-clear-right"
-                          :class="globalSearch.class"
-                        >
-                          <span
-                            v-if="globalSearch.showClearButton"
-                            class="form-control-feedback global-search-clear"
-                            @click="clearGlobalSearch"
-                          >
-                            <ion-icon :icon="closeCircle"></ion-icon>
-                          </span>
-                          <input
-                            v-if="globalSearch.searchOnPressEnter"
-                            ref="globalSearch"
-                            type="text"
-                            class="form-control"
-                            :placeholder="globalSearch.placeholder"
-                            @keyup.enter="
-                              updateGlobalSearchHandler($event.target?.value)
-                            "
-                          />
-                          <input
-                            v-else
-                            ref="globalSearch"
-                            type="text"
-                            class="form-control"
-                            :placeholder="globalSearch.placeholder"
-                            @keyup.stop="
-                              updateGlobalSearch($event.target?.value)
-                            "
-                          />
-                        </div>
-                      </div>
-                      <!-- global search text ends here -->
-
-                      <!-- refresh & reset button starts here -->
-                      <div class="col-md-6">
-                        <div
-                          class="btn-group"
-                          role="group"
-                          aria-label="Table Actions buttons"
-                        >
-                          <button
-                            v-if="showRefreshButton"
-                            type="button"
-                            class="btn btn-secondary refresh-button"
-                            @click="$emit('refresh-data')"
-                          >
-                            <slot name="refresh-button-text"> Refresh </slot>
-                          </button>
-                          <button
-                            type="button"
-                            v-if="showResetButton"
-                            class="btn btn-secondary reset-button"
-                            @click="resetQuery"
-                          >
-                            <slot name="reset-button-text"> Reset Query </slot>
-                          </button>
-                        </div>
-                      </div>
-                      <!-- refresh & reset button ends here -->
-                    </div>
-                  </div>
-
-                  <!-- action buttons starts here -->
-                  <div class="col-md-8">
-                    <slot name="action-buttons">
-                      <div
-                        class="btn-group float-right"
-                        role="group"
-                        aria-label="Basic example"
-                      >
-                        <button
-                          v-for="(action, key, index) in actions"
-                          :key="index"
-                          type="button"
-                          class="btn"
-                          :class="getActionButtonClass(action)"
-                          @click="emitActionEvent(action)"
-                        >
-                          <slot :name="action.label">
-                            <span v-html="action.label"></span>
-                          </slot>
-                        </button>
-                      </div>
-                    </slot>
-                  </div>
-                  <!-- action buttons button ends here -->
-                </div>
-                <!-- <a href="" v-if="allRowsSelected">sadfsdf</a> -->
               </th>
             </tr>
 
@@ -150,19 +123,11 @@
                       {{ column.label }}
                     </slot>
 
-                    <template v-if="isSortableColumn(column)">
-                      <SortIcon :sort="query.sort" :column="column">
-                        <template slot="sort-asc-icon">
-                          <slot name="sort-asc-icon"> &#x1F825; </slot>
-                        </template>
-                        <template slot="sort-desc-icon">
-                          <slot name="sort-desc-icon"> &#x1F827; </slot>
-                        </template>
-                        <template slot="no-sort-icon">
-                          <slot name="no-sort-icon"> &#x1F825;&#x1F827; </slot>
-                        </template>
-                      </SortIcon>
-                    </template>
+                    <SortIcon
+                      v-if="isSortableColumn(column)"
+                      :sort="query.sort" 
+                      :column="column"
+                    ></SortIcon>
                   </th>
                 </template>
               </slot>
@@ -181,9 +146,6 @@
                       @updateFilter="updateFilter"
                       @clearFilter="clearFilter"
                     >
-                      <template slot="simple-filter-clear-icon">
-                        <slot name="simple-filter-clear-icon"> &#x24E7; </slot>
-                      </template>
                     </SimpleFilter>
                     <MultiSelect
                       v-if="column.filter?.type === 'select'"
