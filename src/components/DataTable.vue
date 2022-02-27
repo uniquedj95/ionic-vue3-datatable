@@ -1,269 +1,237 @@
 <template>
-  <div :class="{ card: cardMode }">
-    <div class="card-header" v-if="cardMode">
-      <div class="text-center">
-        {{ cardTitle }}
-      </div>
-    </div>
-    <div :class="{ 'card-body': cardMode }">
-      <div class="responsive-table" :class="tableWrapperClasses">
-        <table class="table striped-table bordered-table" :class="tableClasses">
-          <thead>
-            <tr v-if="showToolsRow" class="table-tools">
-              <th :colspan="headerColSpan">
-                <ion-grid>
+  <div class="responsive-table" :class="tableWrapperClasses">
+    <table class="table striped-table bordered-table" :class="tableClasses">
+      <thead>
+        <tr v-if="showToolsRow" class="table-tools">
+          <th :colspan="headerColSpan">
+            <ion-grid>
+              <ion-row>
+                <ion-col size-md="4">
                   <ion-row>
-                    <ion-col size-md="4">
-                      <ion-row>
-                        <ion-col size-md="6" v-if="globalSearch && globalSearch.visibility || true">
-                          <div class="form-group has-clear-right" :class="globalSearch.class">
-                            <span v-if="globalSearch.showClearButton" class="form-control-feedback global-search-clear" @click="clearGlobalSearch">
-                              <ion-icon :icon="closeCircle"></ion-icon>
-                            </span>
-                            <input
-                              v-if="globalSearch.searchOnPressEnter"
-                              ref="globalSearch"
-                              type="text"
-                              class="form-control"
-                              :placeholder="globalSearch.placeholder"
-                              @keyup.enter="
-                                updateGlobalSearchHandler($event.target?.value)
-                              "
-                            />
-                            <input
-                              v-else
-                              ref="globalSearch"
-                              type="text"
-                              class="form-control"
-                              :placeholder="globalSearch.placeholder"
-                              @keyup.stop="
-                                updateGlobalSearch($event.target?.value)
-                              "
-                            />
-                          </div>
-                        </ion-col>
-                        <ion-col size-md="4">
-                          <div
-                            class="btn-group"
-                            role="group"
-                            aria-label="Table Actions buttons"
-                          >
-                            <button
-                              v-if="showRefreshButton"
-                              type="button"
-                              class="btn btn-secondary refresh-button"
-                              @click="$emit('refresh-data')"
-                            >
-                              <slot name="refresh-button-text"> Refresh </slot>
-                            </button>
-                            <button
-                              type="button"
-                              v-if="showResetButton"
-                              class="btn btn-secondary reset-button"
-                              @click="resetQuery"
-                            >
-                              <slot name="reset-button-text"> Reset Query </slot>
-                            </button>
-                          </div>
-                        </ion-col>
-                      </ion-row>
-                    </ion-col>
-                    <ion-col size-md="8">
-                      <slot name="action-buttons">
-                        <div
-                          class="btn-group float-right"
-                          role="group"
-                          aria-label="Basic example"
+                    <ion-col
+                      size-md="6"
+                      v-if="(globalSearch && globalSearch.visibility) || true"
+                    >
+                      <div
+                        class="form-group has-clear-right"
+                        :class="globalSearch.class"
+                      >
+                        <span
+                          v-if="globalSearch.showClearButton"
+                          class="form-control-feedback global-search-clear"
+                          @click="clearGlobalSearch"
                         >
-                          <button
-                            v-for="(action, key, index) in actions"
-                            :key="index"
-                            type="button"
-                            class="btn"
-                            :class="getActionButtonClass(action)"
-                            @click="emitActionEvent(action)"
-                          >
-                            <slot :name="action.label">
-                              <span v-html="action.label"></span>
-                            </slot>
-                          </button>
-                        </div>
-                      </slot>
+                          <ion-icon :icon="closeCircle"></ion-icon>
+                        </span>
+                        <input
+                          v-if="globalSearch.searchOnPressEnter"
+                          ref="globalSearch"
+                          type="text"
+                          class="form-control"
+                          :placeholder="globalSearch.placeholder"
+                          @keyup.enter="
+                            updateGlobalSearchHandler($event.target?.value)
+                          "
+                        />
+                        <input
+                          v-else
+                          ref="globalSearch"
+                          type="text"
+                          class="form-control"
+                          :placeholder="globalSearch.placeholder"
+                          @keyup.stop="updateGlobalSearch($event.target?.value)"
+                        />
+                      </div>
+                    </ion-col>
+                    <ion-col size-md="4">
+                      <div
+                        class="btn-group"
+                        role="group"
+                        aria-label="Table Actions buttons"
+                      >
+                        <button
+                          v-if="showRefreshButton"
+                          type="button"
+                          class="btn btn-secondary refresh-button"
+                          @click="$emit('refresh-data')"
+                        >
+                          <slot name="refresh-button-text"> Refresh </slot>
+                        </button>
+                        <button
+                          type="button"
+                          v-if="showResetButton"
+                          class="btn btn-secondary reset-button"
+                          @click="resetQuery"
+                        >
+                          <slot name="reset-button-text"> Reset Query </slot>
+                        </button>
+                      </div>
                     </ion-col>
                   </ion-row>
-                </ion-grid>
-              </th>
-            </tr>
-
-            <tr>
-              <select-all-rows-check-box
-                v-if="checkboxRows"
-                :allRowsSelected="allRowsSelected"
-                :currentPageSelectionCount="currentPageSelectionCount"
-                @selectAll="selectAllCheckbox"
-              />
-
-              <slot name="columns" :columns="cColumns">
-                <template v-for="(column, key, index) in cColumns">
-                  <th
-                    v-if="canShowColumn(column)"
-                    :key="index"
-                    v-on="
-                      isSortableColumn(column)
-                        ? { click: () => updateSortQuery(column) }
-                        : {}
-                    "
-                    class="column-header"
-                    :class="columnClasses(column)"
-                  >
-                    <slot
-                      :name="'column_' + getCellSlotName(column)"
-                      :column="column"
+                </ion-col>
+                <ion-col size-md="8">
+                  <slot name="action-buttons">
+                    <div
+                      class="btn-group float-right"
+                      role="group"
+                      aria-label="Basic example"
                     >
-                      {{ column.label }}
-                    </slot>
+                      <button
+                        v-for="(action, key, index) in actions"
+                        :key="index"
+                        type="button"
+                        class="btn"
+                        :class="getActionButtonClass(action)"
+                        @click="emitActionEvent(action)"
+                      >
+                        <slot :name="action.label">
+                          <span v-html="action.label"></span>
+                        </slot>
+                      </button>
+                    </div>
+                  </slot>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </th>
+        </tr>
 
-                    <SortIcon
-                      v-if="isSortableColumn(column)"
-                      :sort="query.sort" 
-                      :column="column"
-                    ></SortIcon>
-                  </th>
-                </template>
-              </slot>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- filter row starts here -->
-            <tr class="table-active" v-if="showFilterRow">
-              <td v-show="checkboxRows"></td>
-              <template v-for="(column, key, index) in cColumns">
-                <td v-if="canShowColumn(column)" :key="index" align="center">
-                  <template v-if="hasFilter(column)">
-                    <SimpleFilter
-                      v-if="column.filter?.type === 'simple'"
-                      :column="column"
-                      @updateFilter="updateFilter"
-                      @clearFilter="clearFilter"
-                    >
-                    </SimpleFilter>
-                    <MultiSelect
-                      v-if="column.filter?.type === 'select'"
-                      :options="column.filter?.options"
-                      :column="column"
-                      @updateMultiSelectFilter="updateMultiSelectFilter"
-                      @clearFilter="clearFilter"
-                    ></MultiSelect>
-                    <template v-if="column.filter?.type === 'custom'">
-                      <slot :name="column.filter?.slotName" :column="column">
-                      </slot>
-                    </template>
-                  </template>
-                </td>
-              </template>
-            </tr>
-            <!-- filter row ends here -->
+        <tr>
+          <select-all-rows-check-box
+            v-if="checkboxRows"
+            :allRowsSelected="allRowsSelected"
+            :currentPageSelectionCount="currentPageSelectionCount"
+            @selectAll="selectAllCheckbox"
+          />
 
-            <!-- data rows stars here -->
-            <table-row
-              v-for="(row, index) in cRows"
-              :key="index"
-              :row="row"
-              :columns="cColumns"
-              :rowIndex="index"
-              :checkboxRows="checkboxRows"
-              :rowsSelectable="rowsSelectable"
-              :selectedItems="selectedItems"
-              :highlightRowHover="highlightRowHover"
-              :highlightRowHoverColor="highlightRowHoverColor"
-              :propPowClasses="classes.row"
-              :propCellClasses="classes.cell"
-              :uniqueId="uniqueId"
-              @addRow="handleAddRow"
-              @removeRow="handleRemoveRow"
-            >
-              <template
-                v-for="column in columns"
-                :slot="'' + getCellSlotName(column)"
+          <slot name="columns" :columns="cColumns">
+            <template v-for="(column, key, index) in cColumns">
+              <th
+                v-if="canShowColumn(column)"
+                :key="index"
+                v-on="
+                  isSortableColumn(column)
+                    ? { click: () => updateSortQuery(column) }
+                    : {}
+                "
+                class="column-header"
+                :class="columnClasses(column)"
               >
                 <slot
-                  :name="getCellSlotName(column)"
-                  :row="row"
+                  :name="'column_' + getCellSlotName(column)"
                   :column="column"
-                  :cellValue="getProperty(row, column.name)"
                 >
-                  {{ getProperty(row, column.name) }}
+                  {{ column.label }}
                 </slot>
+
+                <SortIcon
+                  v-if="isSortableColumn(column)"
+                  :sort="query.sort"
+                  :column="column"
+                ></SortIcon>
+              </th>
+            </template>
+          </slot>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- filter row starts here -->
+        <tr class="table-active" v-if="showFilterRow">
+          <td v-show="checkboxRows"></td>
+          <template v-for="(column, key, index) in cColumns">
+            <td v-if="canShowColumn(column)" :key="index" align="center">
+              <template v-if="hasFilter(column)">
+                <SimpleFilter
+                  v-if="column.filter?.type === 'simple'"
+                  :column="column"
+                  @updateFilter="updateFilter"
+                  @clearFilter="clearFilter"
+                >
+                </SimpleFilter>
+                <MultiSelect
+                  v-if="column.filter?.type === 'select'"
+                  :options="column.filter?.options"
+                  :column="column"
+                  @updateMultiSelectFilter="updateMultiSelectFilter"
+                  @clearFilter="clearFilter"
+                ></MultiSelect>
+                <template v-if="column.filter?.type === 'custom'">
+                  <slot :name="column.filter?.slotName" :column="column">
+                  </slot>
+                </template>
               </template>
-            </table-row>
-            <!-- empty row starts here -->
-            <tr v-show="cRows.length === 0">
-              <td :colspan="headerColSpan">
-                <slot name="empty-results"> No results found </slot>
-              </td>
-            </tr>
-            <!-- empty row ends here -->
+            </td>
+          </template>
+        </tr>
+        <!-- filter row ends here -->
 
-            <!-- data rows ends here -->
-
-            <!-- Pagination row starts here -->
-            <tr v-if="showPaginationRow" class="footer-pagination-row">
-              <td :colspan="headerColSpan">
-                <ion-row>
-                  <ion-col size-md="8">
-                    <pagination
-                      v-if="pagination"
-                      :currentPage="currentPage"
-                      :perPageItems="perPageItems"
-                      :perPageOptions="perPageOptions"
-                      :total="totalFilteredRows"
-                      :visibleButtons="visibleButtons"
-                    />
-                  </ion-col>
-                  <ion-col size-md="4">
-                    <PaginationInfo 
-                      v-if="showPaginationInfo"
-                      :totalRows="totalRows"
-                      :totalFilteredRows="totalFilteredRows"
-                      :totalOriginalRows="totalOriginalRows"
-                      :showSelectedRowsInfo="showSelectedRowsInfo"
-                      :totalSelectedItems="totalSelectedItems"
-                    />
-                  </ion-col>
-                </ion-row>
-              </td>
-            </tr>
-            <!-- Pagination ends starts here -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card-footer" v-if="cardMode">
-      <slot name="card-footer">
-        <ion-row>
-          <ion-col size-md="6">
-            <pagination
-              v-if="pagination"
-              :currentPage="currentPage"
-              :perPageItems="perPageItems"
-              :perPageOptions="perPageOptions"
-              :total="totalFilteredRows"
-              :visibleButtons="visibleButtons"
-            />
-          </ion-col>
-          <ion-col size-md="6">
-            <PaginationInfo 
-              v-if="showPaginationInfo"
-              :totalRows="totalRows"
-              :totalFilteredRows="totalFilteredRows"
-              :totalOriginalRows="totalOriginalRows"
-              :showSelectedRowsInfo="showSelectedRowsInfo"
-              :totalSelectedItems="totalSelectedItems"
-            />
-          </ion-col>
-        </ion-row>
-      </slot>
-    </div>
+        <!-- data rows stars here -->
+        <table-row
+          v-for="(row, index) in cRows"
+          :key="index"
+          :row="row"
+          :columns="cColumns"
+          :rowIndex="index"
+          :checkboxRows="checkboxRows"
+          :rowsSelectable="rowsSelectable"
+          :selectedItems="selectedItems"
+          :highlightRowHover="highlightRowHover"
+          :highlightRowHoverColor="highlightRowHoverColor"
+          :propPowClasses="classes.row"
+          :propCellClasses="classes.cell"
+          :uniqueId="uniqueId"
+          @addRow="handleAddRow"
+          @removeRow="handleRemoveRow"
+        >
+          <template
+            v-for="column in columns"
+            :slot="'' + getCellSlotName(column)"
+          >
+            <slot
+              :name="getCellSlotName(column)"
+              :row="row"
+              :column="column"
+              :cellValue="getProperty(row, column.name)"
+            >
+              {{ getProperty(row, column.name) }}
+            </slot>
+          </template>
+        </table-row>
+        
+        <tr v-show="cRows.length === 0">
+          <td :colspan="headerColSpan">
+            <div class="empty-results"> No results found </div>
+          </td>
+        </tr>
+        
+        <tr v-if="showPaginationRow" class="footer-pagination-row">
+          <td :colspan="headerColSpan">
+            <ion-row>
+              <ion-col size-md="8">
+                <pagination
+                  v-if="pagination"
+                  :currentPage="currentPage"
+                  :perPageItems="perPageItems"
+                  :perPageOptions="perPageOptions"
+                  :total="totalFilteredRows"
+                  :visibleButtons="visibleButtons"
+                />
+              </ion-col>
+              <ion-col size-md="4">
+                <PaginationInfo
+                  v-if="showPaginationInfo"
+                  :totalRows="totalRows"
+                  :totalFilteredRows="totalFilteredRows"
+                  :totalOriginalRows="totalOriginalRows"
+                  :showSelectedRowsInfo="showSelectedRowsInfo"
+                  :totalSelectedItems="totalSelectedItems"
+                />
+              </ion-col>
+            </ion-row>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -348,9 +316,8 @@ export default defineComponent({
   },
   // emits: ["resetQuery", "selectRow", "unselectRow", "selectAllRows", "unselectAllRows", "changeQuery"] as keyof TableActionsBtn.eventName,
   setup(props, { emit }) {
-    console.log(props.columns)
+    console.log(props.columns);
     const cRows = ref(cloneDeep(props.rows));
-    const cardTitle = ref(props.config.cardTitle || "");
     const currentPage = ref(props.config.currentPage || 1);
     const perPageItems = ref(props.config.perPageItems || 10);
     const loaderText = ref(props.config.loaderText || "Loading...");
@@ -372,7 +339,6 @@ export default defineComponent({
     const isFirstTime = ref(true);
     const isResponsive = ref(true);
     const canEmitQueries = ref(false);
-    const cardMode = ref(get(props.config, "cardMode", true));
     const serverMode = ref(get(props.config, "serverMode", false));
     const checkboxRows = ref(get(props.config, "checkboxRows", false));
     const rowsSelectable = ref(get(props.config, "rowsSelectable", false));
@@ -396,7 +362,7 @@ export default defineComponent({
     const cColumns = computed(() => {
       return props.columns.map((column, index) => {
         column.id = index + 1;
-        console.log(column)
+        console.log(column);
         return column;
       });
     });
@@ -428,7 +394,7 @@ export default defineComponent({
       return count;
     });
 
-     const globalSearch = ref<GlobalSearchConfig>({
+    const globalSearch = ref<GlobalSearchConfig>({
       placeholder: get(
         props.config,
         "globalSearch.placeholder",
@@ -450,7 +416,6 @@ export default defineComponent({
       class: get(props.config, "globalSearch.class", ""),
       init: get(props.config, "globalSearch.init.value", ""),
     });
-
 
     const showToolsRow = computed(() => {
       return (
@@ -474,7 +439,6 @@ export default defineComponent({
 
     const showPaginationRow = computed(() => {
       return (
-        !cardMode.value &&
         (pagination.value ||
           showPaginationInfo.value ||
           showSelectedRowsInfo.value)
@@ -876,34 +840,35 @@ export default defineComponent({
     };
 
     const initFilterQueries = () => {
-      cColumns.value && cColumns.value.forEach((column) => {
-        if (!column.filter || !column.filter.init?.value) return;
+      cColumns.value &&
+        cColumns.value.forEach((column) => {
+          if (!column.filter || !column.filter.init?.value) return;
 
-        if (column.filter.type == "simple") {
-          updateFilter({
-            value: column.filter.init.value,
-            column: column,
-          });
-        } else if (column.filter.type == "select") {
-          let initialValues: any[] = [];
-          if (isMultiFilterMode(column.filter)) {
-            initialValues = column.filter.init.value;
-          } else if (isSingleFilterMode(column.filter)) {
-            initialValues = [column.filter.init.value];
+          if (column.filter.type == "simple") {
+            updateFilter({
+              value: column.filter.init.value,
+              column: column,
+            });
+          } else if (column.filter.type == "select") {
+            let initialValues: any[] = [];
+            if (isMultiFilterMode(column.filter)) {
+              initialValues = column.filter.init.value;
+            } else if (isSingleFilterMode(column.filter)) {
+              initialValues = [column.filter.init.value];
+            }
+
+            let selectedOptions =
+              column.filter?.options &&
+              column.filter?.options
+                .filter((_, index) => initialValues.includes(index))
+                .map((option) => option.value);
+
+            updateMultiSelectFilter({
+              selectedOptions: selectedOptions,
+              column: column,
+            });
           }
-
-          let selectedOptions =
-            column.filter?.options &&
-            column.filter?.options
-              .filter((_, index) => initialValues.includes(index))
-              .map((option) => option.value);
-
-          updateMultiSelectFilter({
-            selectedOptions: selectedOptions,
-            column: column,
-          });
-        }
-      });
+        });
     };
 
     const searchGlobally = (rows: any[]) => {
@@ -1056,10 +1021,7 @@ export default defineComponent({
             }
           } else if (filter.type === "select") {
             if (
-              multiSelectFilter(
-                get(row, filter.name),
-                filter.selected_options
-              )
+              multiSelectFilter(get(row, filter.name), filter.selected_options)
             ) {
               flag = true;
             } else {
@@ -1273,8 +1235,6 @@ export default defineComponent({
       perPageItems,
       selectedItems,
       allRowsSelected,
-      cardTitle,
-      cardMode,
       serverMode,
       loaderText,
       checkboxRows,
