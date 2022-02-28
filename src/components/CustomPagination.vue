@@ -10,7 +10,7 @@
         &laquo;
       </ion-button>
       <template v-if="isEmpty">
-        <span disabled>...</span>
+        <ion-button disabled>...</ion-button>
       </template>
       <template v-else>
         <ion-button
@@ -20,7 +20,7 @@
         >
           1
         </ion-button>
-        <span v-if="start > 3" disabled>...</span>
+        <ion-button v-if="start > 3" disabled>...</ion-button>
         <ion-button
           v-for="index in range"
           :key="index"
@@ -29,7 +29,9 @@
         >
           {{ index }}
         </ion-button>
-        <span v-if="end < totalPages - 2" disabled>...</span>
+        <ion-button v-if="end < totalPages - 2" disabled color="light"
+          >...</ion-button
+        >
         <ion-button
           v-if="end < totalPages - 2"
           color="light"
@@ -46,39 +48,31 @@
       >
         <span aria-hidden="true">&raquo;</span>
       </ion-button>
-    </div>
-    <div class="page-filters">
-      <div class="filter-item">
-        <ion-label>items per page: </ion-label>
-        <select class="per-page-options">
-          <option
+      <ion-item color="primary" button>
+        <ion-label>items per page</ion-label>
+        <ion-select :value="perPageItems" v-model="itemPerPage">
+          <ion-select-option
             v-for="(option, index) in perPageOptions"
             :key="index"
             :value="option"
-            :selected="option === perPageItems"
-            @click.prevent="perPageHandler(option)"
           >
             {{ option }}
-          </option>
-        </select>
-      </div>
-      <div class="filter-item">
-        <ion-label>Go to page: </ion-label>
-        <input
-          type="number"
-          min="1"
-          step="1"
-          :max="totalPages"
-          @keyup.enter="goToPage"
-          v-model.number="pageToGo"
-        />
-      </div>
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { generateRange, isPositiveInteger } from "@/utils/Numbers";
+import { generateRange } from "@/utils/Numbers";
+import {
+  IonItem,
+  IonLabel,
+  IonSelect,
+  IonSelectOption,
+  IonButton,
+} from "@ionic/vue";
 import {
   computed,
   defineComponent,
@@ -111,29 +105,41 @@ export default defineComponent({
       default: () => [5, 10, 15] as Array<number>,
     },
   },
-  emits: ["update:currentPage", "update:perPageItems"],
+  components: {
+    IonItem,
+    IonLabel,
+    IonSelect,
+    IonSelectOption,
+    IonButton,
+  },
+  emits: ["updateCurrentPage", "updatePerPageItems"],
   setup(props, { emit }) {
     const start = ref(props.currentPage);
     const end = ref(0);
-    const pageToGo = ref(0);
-    const disablePreviousButton = computed(() => {
-      return props.currentPage === start.value;
+    const itemPerPage = computed({
+      set: (value) => {
+        console.log(value)
+        emit("updatePerPageItems", value)
+      },
+      get: () => props.perPageItems
     });
+
+    const disablePreviousButton = computed(
+      () => props.currentPage === start.value
+    );
     const disableNextButton = computed(() => props.currentPage === end.value);
     const isEmpty = computed(() => props.total === 0);
     const range = computed(() => generateRange(start.value, end.value + 1));
     const totalPages = computed(() =>
       Math.ceil(props.total / props.perPageItems)
     );
-    const perPageHandler = (option: any) => emit("update:perPageItems", option);
+    const perPageHandler = (option: any) => {
+      console.log(option);
+      emit("updatePerPageItems", option);
+    };
     const pageHandler = (index: number) => {
       if (index >= 1 && index <= totalPages.value) {
-        emit("update:currentPage", index);
-      }
-    };
-    const goToPage = () => {
-      if (!pageToGo.value && isPositiveInteger(pageToGo.value)) {
-        pageHandler(pageToGo.value);
+        emit("updateCurrentPage", index);
       }
     };
     const calculatePageRange = (force = false) => {
@@ -185,7 +191,7 @@ export default defineComponent({
     return {
       start,
       end,
-      pageToGo,
+      itemPerPage,
       disablePreviousButton,
       disableNextButton,
       range,
@@ -193,7 +199,6 @@ export default defineComponent({
       isEmpty,
       perPageHandler,
       pageHandler,
-      goToPage,
       calculatePageRange,
     };
   },
@@ -224,5 +229,12 @@ export default defineComponent({
 }
 h6 {
   margin-right: 0.5rem;
+}
+
+ion-item {
+  --min-height: 12px;
+  margin-left: 0.1rem;
+  padding-left: 0.5rem;
+  font-size: small;
 }
 </style>

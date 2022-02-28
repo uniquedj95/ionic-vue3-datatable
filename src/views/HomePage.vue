@@ -126,7 +126,7 @@ export default defineComponent({
       loader.present();
       setTimeout(() => {
         const users: any[] = [];
-        for (let i = 1; i < 30; i++) {
+        for (let i = 1; i < 300; i++) {
           users.push({
             id: i,
             firstName: `first name${i}`,
@@ -136,7 +136,7 @@ export default defineComponent({
         }
         rows.value = users;
         loader.dismiss();
-      }, 5000);
+      }, 500);
     };
 
     const onSelectRows = (payload: any) => {
