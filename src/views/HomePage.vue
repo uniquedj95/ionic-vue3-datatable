@@ -126,7 +126,7 @@ export default defineComponent({
       loader.present();
       setTimeout(() => {
         const users: any[] = [];
-        for (let i = 1; i < 300; i++) {
+        for (let i = 1; i < 331; i++) {
           users.push({
             id: i,
             firstName: `first name${i}`,

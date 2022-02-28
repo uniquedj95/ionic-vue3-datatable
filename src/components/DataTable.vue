@@ -186,7 +186,7 @@
                   :total="totalFilteredRows"
                   :visibleButtons="visibleButtons"
                   @updatePerPageItems="updatePerPageItems"
-                  @updateCurrentPage="''"
+                  @updateCurrentPage="updateCurrentPage"
                 />
               </ion-col>
               <ion-col size-md="4">
@@ -292,6 +292,7 @@ export default defineComponent({
     console.log(props.columns);
     const cRows = ref(cloneDeep(props.rows));
     const currentPage = ref(props.config.currentPage || 1);
+    const updateCurrentPage = (page: number) => currentPage.value = page
     const perPageItems = ref(props.config.perPageItems || 10);
     const updatePerPageItems = (value: number) => perPageItems.value = value
     const loaderText = ref(props.config.loaderText || "Loading...");
@@ -1234,6 +1235,7 @@ export default defineComponent({
       showFilterRow,
       updateGlobalSearch,
       updatePerPageItems,
+      updateCurrentPage,
       getProperty: get,
       getCellSlotName,
       handleRemoveRow,

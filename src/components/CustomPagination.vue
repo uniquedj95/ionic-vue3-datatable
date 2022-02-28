@@ -20,7 +20,7 @@
         >
           1
         </ion-button>
-        <ion-button v-if="start > 3" disabled>...</ion-button>
+        <ion-button v-if="start > 3" disabled color="light">...</ion-button>
         <ion-button
           v-for="index in range"
           :key="index"
