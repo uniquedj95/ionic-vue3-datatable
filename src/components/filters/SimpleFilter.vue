@@ -5,7 +5,7 @@
       class="form-control-feedback simple-filter-clear"
       @click="clearFilter"
     >
-      <slot name="simple-filter-clear-icon"> </slot>
+      &#x24E7;
     </span>
     <input
       v-if="filterOnPressEnter"

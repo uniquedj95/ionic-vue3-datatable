@@ -1,8 +1,13 @@
 <template>
-  <div class="float-right">
-    <ion-icon v-if="order === 'asc'" :icon="arrowUp"></ion-icon>
-    <ion-icon v-else-if="order === 'desc'" :icon="arrowDown"></ion-icon>
-    <ion-icon v-else :icon="swapVertical"></ion-icon>
+  <div class="right">
+    <template v-if="isColumnSorted(column.name, sort)">
+      <ion-icon :icon="swapVertical"></ion-icon>
+    </template>
+    <template v-else>
+      <ion-icon v-if="order === 'asc'" :icon="arrowUp"></ion-icon>
+      <ion-icon v-else-if="order === 'desc'" :icon="arrowDown"></ion-icon>
+      <ion-icon v-else :icon="swapVertical"></ion-icon>
+    </template>
   </div>
 </template>
 
@@ -11,6 +16,7 @@ import { TableColumn } from "@/interfaces/datatable";
 import { computed, defineComponent, PropType } from "vue";
 import { swapVertical, arrowUp, arrowDown } from "ionicons/icons";
 import { IonIcon } from "@ionic/vue";
+import { isColumnSorted } from "@/utils/Table";
 
 export default defineComponent({
   props: {
@@ -24,7 +30,7 @@ export default defineComponent({
     },
   },
   components: {
-    IonIcon
+    IonIcon,
   },
   setup(props) {
     const order = computed(() => {
@@ -37,19 +43,21 @@ export default defineComponent({
       } else {
         return props.sort[index].order;
       }
-    })
+    });
     return {
       order,
-      swapVertical, 
-      arrowUp, 
-      arrowDown
+      swapVertical,
+      arrowUp,
+      arrowDown,
+      isColumnSorted,
     };
   },
 });
 </script>
 
 <style>
-.float-right {
+.right {
   float: right;
+  margin-right: .5em;
 }
 </style>

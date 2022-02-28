@@ -6,8 +6,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <data-table v-if="rows"
-        :classes="classes"
+      <data-table
+        v-if="rows"
+        :classes="cssClasses"
         :rows="rows"
         :columns="columns"
         :config="config"
@@ -51,44 +52,23 @@ export default defineComponent({
     DataTable,
   },
   setup() {
-    const rows = ref<any[]>()
-    const customFilters = ref<TableColumnFilter[]>([])
-    const actions = ref<TableActionsBtn[]>([])
-    const classes = ref<TableCSSClasses>({
-      tableWrapper: "",
-      table: ["table-striped my-class", "table-bordered my-class-two"],
-      row: "my-row my-row2 function-class",
-      cell: ["my-cell my-cell2", "text-danger"],
+    const rows = ref<any[]>();
+    const customFilters = ref<TableColumnFilter[]>([]);
+    const actions = ref<TableActionsBtn[]>([]);
+    const cssClasses = ref<TableCSSClasses>({
+      tableWrapper: "responsive-table",
+      table: "striped-table bordered-table",
     });
 
     const columns = ref<TableColumn[]>([
       {
         label: "id",
         name: "id",
-        filter: {
-          type: "simple",
-          placeholder: "id",
-        },
         sort: true,
-        rowClasses: "myrowclassone myrowclasstwo",
       },
       {
         label: "First Name",
         name: "firstName",
-        filter: {
-          type: "select",
-          placeholder: "Select first name",
-          options: [],
-          mode: "multi",
-          closeDropdownOnSelection: true,
-          selectAllCheckbox: {
-            visibility: true,
-            text: "Select all",
-          },
-          init: {
-            value: [244],
-          },
-        },
         sort: true,
         initialSort: false,
         sortCaseSensitive: false,
@@ -96,24 +76,14 @@ export default defineComponent({
       {
         label: "Last Name",
         name: "lastName",
-        filter: {
-          type: "select",
-          placeholder: "Select first name",
-          options: [],
-          mode: "multi",
-          closeDropdownOnSelection: true,
-          selectAllCheckbox: {
-            visibility: true,
-            text: "Select all",
-          },
-          init: {
-            value: [244],
-          },
-        },
         sort: true,
         initialSort: false,
         sortCaseSensitive: false,
       },
+      {
+        label: "Email Address",
+        name: "email"
+      }
     ]);
 
     const config = ref<TableConfig>({
@@ -151,37 +121,38 @@ export default defineComponent({
 
     const fetchData = async () => {
       const loader = await loadingController.create({
-        message: "loading data..."
-      })
-      loader.present()
+        message: "loading data...",
+      });
+      loader.present();
       setTimeout(() => {
         const users: any[] = [];
-        for(let i = 1; i < 30; i++) {
+        for (let i = 1; i < 30; i++) {
           users.push({
             id: i,
             firstName: `first name${i}`,
-            lastName: `last name${i}`
-          })
+            lastName: `last name${i}`,
+            email: `example${i}@domain.com`,
+          });
         }
-        rows.value = users
-        loader.dismiss()
-      }, 5000)
-    }
+        rows.value = users;
+        loader.dismiss();
+      }, 5000);
+    };
 
     const onSelectRows = (payload: any) => {
-      console.log(payload)
-    }
+      console.log(payload);
+    };
 
     const onDownload = (payload: any) => {
-      console.log(payload)
-    }
+      console.log(payload);
+    };
 
     onMounted(async () => {
-      await fetchData()
-    })
+      await fetchData();
+    });
 
     return {
-      classes,
+      cssClasses,
       columns,
       rows,
       config,

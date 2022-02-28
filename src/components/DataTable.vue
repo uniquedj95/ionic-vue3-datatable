@@ -1,6 +1,6 @@
 <template>
-  <div class="responsive-table" :class="tableWrapperClasses">
-    <table class="table striped-table bordered-table" :class="tableClasses">
+  <div :class="tableWrapperClasses">
+    <table class="table" :class="tableClasses">
       <thead>
         <tr v-if="showToolsRow" class="table-tools">
           <th :colspan="headerColSpan">
@@ -105,31 +105,15 @@
           />
 
           <slot name="columns" :columns="cColumns">
-            <template v-for="(column, key, index) in cColumns">
-              <th
+            <template v-for="(column, index) in cColumns">
+              <TableColumnVue
                 v-if="canShowColumn(column)"
                 :key="index"
-                v-on="
-                  isSortableColumn(column)
-                    ? { click: () => updateSortQuery(column) }
-                    : {}
-                "
+                :column="column"
                 class="column-header"
                 :class="columnClasses(column)"
-              >
-                <slot
-                  :name="'column_' + getCellSlotName(column)"
-                  :column="column"
-                >
-                  {{ column.label }}
-                </slot>
-
-                <SortIcon
-                  v-if="isSortableColumn(column)"
-                  :sort="query.sort"
-                  :column="column"
-                ></SortIcon>
-              </th>
+                @updateSort="updateSortQuery(column)"
+              />
             </template>
           </slot>
         </tr>
@@ -240,7 +224,6 @@ import {
 } from "lodash";
 import TableRow from "./TableRow.vue";
 import SelectAllRowsCheckBox from "./SelectAllRowsCheckBox.vue";
-import SortIcon from "./SortIcon.vue";
 import Pagination from "./CustomPagination.vue";
 import PaginationInfo from "./PaginationInfo.vue";
 import SimpleFilter from "./filters/SimpleFilter.vue";
@@ -265,6 +248,7 @@ import {
 } from "@/interfaces/datatable";
 import { closeCircle } from "ionicons/icons";
 import { canShowColumn, isSortableColumn } from "@/utils/Table";
+import TableColumnVue from "./TableColumn.vue";
 
 export default defineComponent({
   props: {
@@ -1271,157 +1255,9 @@ export default defineComponent({
     SelectAllRowsCheckBox,
     SimpleFilter,
     MultiSelect,
-    SortIcon,
     Pagination,
     PaginationInfo,
-  },
+    TableColumnVue
+},
 });
 </script>
-
-<style scoped>
-.table {
-  border-collapse: collapse;
-  border-spacing: 0;
-  width: 100%;
-  border: 1px solid #ddd;
-}
-
-.bordered-table th,
-.bordered-table td {
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-collapse: collapse;
-}
-
-.striped-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.responsive-table {
-  overflow-x: auto;
-}
-
-/*
-    Loader styles copied from here: https://loading.io/css/
-    */
-
-.lds-ripple {
-  display: inline-block;
-  position: relative;
-  width: 64px;
-  height: 64px;
-}
-.lds-ripple div {
-  position: absolute;
-  border: 4px solid #000000;
-  opacity: 1;
-  border-radius: 50%;
-  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-}
-.lds-ripple div:nth-child(2) {
-  animation-delay: -0.5s;
-}
-@keyframes lds-ripple {
-  0% {
-    top: 28px;
-    left: 28px;
-    width: 0;
-    height: 0;
-    opacity: 1;
-  }
-  100% {
-    top: -1px;
-    left: -1px;
-    width: 58px;
-    height: 58px;
-    opacity: 0;
-  }
-}
-
-.table-overlay {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
-  position: absolute;
-  opacity: 0.7;
-  z-index: 7777;
-}
-
-.table-loader-wrapper {
-  height: 100%;
-  width: 100%;
-  justify-content: center;
-}
-
-.table-loader-wrapper .progress {
-  margin-left: 40%;
-  margin-right: 40%;
-}
-
-.select-all-checkbox {
-  margin-bottom: 20px;
-}
-
-.sort-cursor {
-  cursor: pointer;
-}
-.custom-control-label {
-  vertical-align: top;
-}
-.column-header {
-  -webkit-user-select: none; /* Chrome all / Safari all */
-  -moz-user-select: none; /* Firefox all */
-  -ms-user-select: none; /* IE 10+ */
-  user-select: none; /* Likely future */
-}
-.global-search-clear {
-  cursor: pointer;
-}
-input[type="search"] {
-  -webkit-appearance: searchfield;
-}
-
-input[type="search"]::-webkit-search-cancel-button {
-  -webkit-appearance: searchfield-cancel-button;
-}
-
-/* Bootstrap 4 text input with clear icon on the right */
-
-.has-clear-right {
-  position: relative;
-}
-
-.has-clear-right .form-control {
-  padding-right: 2.375rem;
-}
-
-.has-clear-right .form-control-feedback {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 2;
-  display: block;
-  width: 2.375rem;
-  height: 2.375rem;
-  line-height: 2.375rem;
-  text-align: center;
-  font-weight: normal;
-}
-
-.has-clear-right .form-control-feedback:hover {
-  color: red;
-}
-</style>
-
-
-// workflow - server
-// get data(payload)
-// clone to origin_rows
-// do filter
-// do global search
-// do sort
-// do paginate

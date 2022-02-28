@@ -10,7 +10,7 @@
           <input
             class="form-check-input"
             type="checkbox"
-            v-model="selectAllRows"
+            v-model="selectAllRows"1
             value=""
             @change="onChange($event)"
           />
@@ -67,7 +67,7 @@
 <script lang="ts">
 import useEmitter from "@/composables/useEmitter";
 import { defineComponent, onMounted, PropType, ref } from "vue";
-import Column from "./Column.vue";
+import Column from "./TableColumn.vuen.vue";
 
 export default defineComponent({
   props: {

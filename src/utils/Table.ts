@@ -8,3 +8,11 @@ export function canShowColumn(column: TableColumn){
 export function isSortableColumn(column: TableColumn){
   return !!get(column, "sort");
 }
+
+export function isColumnSorted(columnName: string, sortQuery = null as any){
+  return (
+    sortQuery &&
+    sortQuery.name &&
+    sortQuery.name === columnName
+  );
+}
