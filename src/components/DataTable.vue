@@ -77,7 +77,7 @@
                       aria-label="Basic example"
                     >
                       <button
-                        v-for="(action, key, index) in actions"
+                        v-for="(action, index) in actions"
                         :key="index"
                         type="button"
                         class="btn"
@@ -122,7 +122,7 @@
         <!-- filter row starts here -->
         <tr class="table-active" v-if="showFilterRow">
           <td v-show="checkboxRows"></td>
-          <template v-for="(column, key, index) in cColumns">
+          <template v-for="(column, index) in cColumns">
             <td v-if="canShowColumn(column)" :key="index" align="center">
               <template v-if="hasFilter(column)">
                 <SimpleFilter
@@ -354,7 +354,7 @@ export default defineComponent({
         uniqueId = "id";
         return uniqueId;
       }
-      cColumns.value.some((column, key) => {
+      cColumns.value.some((column) => {
         if (get(column, "uniqueId")) {
           uniqueId = column.name;
           return true;
@@ -403,7 +403,7 @@ export default defineComponent({
 
     const showFilterRow = computed(() => {
       let showRow = false;
-      cColumns.value.some((column, key) => {
+      cColumns.value.some((column) => {
         if (has(column, "filter")) {
           showRow = true;
           return true;
@@ -850,7 +850,7 @@ export default defineComponent({
       let globalSearchResults = rows.filter((row) => {
         let flag = false;
 
-        cColumns.value.some((column, key) => {
+        cColumns.value.some((column) => {
           let value: string = get(row, column.name, "");
           let globalSearchText = query.value.globalSearch;
 
@@ -976,7 +976,7 @@ export default defineComponent({
     const filter = (resetPage = true, isInit = false) => {
       let res = originalRows.value.filter((row) => {
         let flag = true;
-        query.value.filters.some((filter, key) => {
+        query.value.filters.some((filter) => {
           if (filter.type === "simple") {
             if (
               simpleFilter(get(row, filter.name), filter.text, filter.config)
@@ -1160,7 +1160,7 @@ export default defineComponent({
       { deep: true }
     );
 
-    watch(currentPage, (newVal, oldVal) => {
+    watch(currentPage, (newVal) => {
       if (!serverMode.value) {
         paginateFilter();
       } else {
