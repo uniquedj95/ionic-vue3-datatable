@@ -40,6 +40,7 @@ import {
   TableConfig,
   TableCSSClasses,
 } from "@/interfaces/datatable";
+import chance from "chance"
 
 export default defineComponent({
   name: "HomePage",
@@ -82,8 +83,20 @@ export default defineComponent({
       },
       {
         label: "Email Address",
-        name: "email"
-      }
+        name: "email",
+      },
+      {
+        label: "Phone",
+        name: "mobile",
+      },
+      {
+        label: "Age",
+        name: "age",
+      },
+      {
+        label: "Country",
+        name: "country",
+      },
     ]);
 
     const config = ref<TableConfig>({
@@ -96,7 +109,6 @@ export default defineComponent({
       highlightRowHover: true,
       rowsSelectable: true,
       multiColumnSort: false,
-      // highlight_row_hover_color:"grey",
       cardTitle: "Example datatable",
       globalSearch: {
         placeholder: "Enter custom Search text",
@@ -104,11 +116,7 @@ export default defineComponent({
         caseSensitive: false,
         showClearButton: true,
         class: "test",
-        // searchOnPressEnter: true,
         searchDebounceRate: 1000,
-        // init: {
-        //     value: "Christine"
-        // }
       },
       perPageOptions: [5, 10, 20, 30, 50],
       showResetButton: true,
@@ -129,9 +137,17 @@ export default defineComponent({
         for (let i = 1; i < 331; i++) {
           users.push({
             id: i,
-            firstName: `first name${i}`,
-            lastName: `last name${i}`,
-            email: `example${i}@domain.com`,
+            firstName: chance().first(),
+            lastName: chance().last(),
+            age: chance().age(),
+            city: chance().city(),
+            street: chance().address(),
+            postcode: chance().postcode(),
+            country: chance().country({ full: true }),
+            salary: chance().integer({ min: 1500, max: 3000 }),
+            email: chance().email(),
+            website: chance().domain(),
+            mobile: chance().phone(),
           });
         }
         rows.value = users;
