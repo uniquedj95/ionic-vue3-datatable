@@ -30,7 +30,7 @@ export default defineComponent({
   emits: ["selectAll"],
   setup(props, { emit }) {
     const showIndeterminateState = computed(() => {
-      return props.allRowsSelected && props.currentPageSelectionCount > 0;
+      return !props.allRowsSelected && props.currentPageSelectionCount > 0;
     });
     const cAllRowsSelected = computed({
       set: () => emit("selectAll"),
