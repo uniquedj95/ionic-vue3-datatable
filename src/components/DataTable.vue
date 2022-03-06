@@ -97,25 +97,22 @@
         </tr>
 
         <tr>
-          <select-all-rows-check-box
+          <SelectAllRowsCheckbox
             v-if="checkboxRows"
             :allRowsSelected="allRowsSelected"
             :currentPageSelectionCount="currentPageSelectionCount"
             @selectAll="selectAllCheckbox"
           />
-
-          <slot name="columns" :columns="cColumns">
-            <template v-for="(column, index) in cColumns">
-              <TableColumnVue
-                v-if="canShowColumn(column)"
-                :key="index"
-                :column="column"
-                class="column-header"
-                :class="columnClasses(column)"
-                @updateSort="updateSortQuery(column)"
-              />
-            </template>
-          </slot>
+          <template v-for="(column, index) in cColumns">
+            <TableColumnVue
+              v-if="canShowColumn(column)"
+              :key="index"
+              :column="column"
+              class="column-header"
+              :class="columnClasses(column)"
+              @updateSort="updateSortQuery(column)"
+            />
+          </template>
         </tr>
       </thead>
       <tbody>
@@ -167,13 +164,13 @@
           @addRow="handleAddRow"
           @removeRow="handleRemoveRow"
         ></table-row>
-        
+
         <tr v-show="cRows.length === 0">
           <td :colspan="headerColSpan">
-            <div class="empty-results"> No results found </div>
+            <div class="empty-results">No results found</div>
           </td>
         </tr>
-        
+
         <tr v-if="showPaginationRow" class="footer-pagination-row">
           <td :colspan="headerColSpan">
             <ion-row>
@@ -225,7 +222,7 @@ import {
   isArray,
 } from "lodash";
 import TableRow from "./TableRow.vue";
-import SelectAllRowsCheckBox from "./SelectAllRowsCheckBox.vue";
+import SelectAllRowsCheckbox from "./SelectAllRowsCheckBox.vue";
 import Pagination from "./CustomPagination.vue";
 import PaginationInfo from "./PaginationInfo.vue";
 import SimpleFilter from "./filters/SimpleFilter.vue";
@@ -292,9 +289,9 @@ export default defineComponent({
     console.log(props.columns);
     const cRows = ref(cloneDeep(props.rows));
     const currentPage = ref(props.config.currentPage || 1);
-    const updateCurrentPage = (page: number) => currentPage.value = page
+    const updateCurrentPage = (page: number) => (currentPage.value = page);
     const perPageItems = ref(props.config.perPageItems || 10);
-    const updatePerPageItems = (value: number) => perPageItems.value = value
+    const updatePerPageItems = (value: number) => (perPageItems.value = value);
     const loaderText = ref(props.config.loaderText || "Loading...");
     const tempFilteredResults = ref<any[]>([]);
     const selectedItems = ref<any[]>([]);
@@ -414,9 +411,9 @@ export default defineComponent({
 
     const showPaginationRow = computed(() => {
       return (
-        (pagination.value ||
-          showPaginationInfo.value ||
-          showSelectedRowsInfo.value)
+        pagination.value ||
+        showPaginationInfo.value ||
+        showSelectedRowsInfo.value
       );
     });
 
@@ -894,8 +891,6 @@ export default defineComponent({
       return selectedOptions.includes(value);
     };
 
-    
-
     const getCellSlotName = (column: TableColumn) => {
       return get(column, "slotName") || column.name.replace(/\./g, "_");
     };
@@ -1258,12 +1253,12 @@ export default defineComponent({
   },
   components: {
     TableRow,
-    SelectAllRowsCheckBox,
+    SelectAllRowsCheckbox,
     SimpleFilter,
     MultiSelect,
     Pagination,
     PaginationInfo,
-    TableColumnVue
-},
+    TableColumnVue,
+  },
 });
 </script>
