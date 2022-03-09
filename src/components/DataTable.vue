@@ -1061,11 +1061,8 @@ export default defineComponent({
 
     watch(perPageItems, () => {
       if (!serverMode.value) {
-        let doPaginateFilter = currentPage.value === 1;
-        if (!preservePageOnDataChange.value) currentPage.value = 1;
-        if (doPaginateFilter) {
-          paginateFilter();
-        }
+        currentPage.value = 1;
+        paginateFilter();
       } else {
         emitQueryParams();
       }
