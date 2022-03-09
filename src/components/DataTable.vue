@@ -1262,3 +1262,9 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.empty-results {
+  margin: 10rem auto;
+}
+</style>
