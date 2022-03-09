@@ -286,7 +286,6 @@ export default defineComponent({
   },
   // emits: ["resetQuery", "selectRow", "unselectRow", "selectAllRows", "unselectAllRows", "changeQuery"] as keyof TableActionsBtn.eventName,
   setup(props, { emit }) {
-    console.log(props.columns);
     const cRows = ref(cloneDeep(props.rows));
     const currentPage = ref(props.config.currentPage || 1);
     const updateCurrentPage = (page: number) => (currentPage.value = page);
@@ -334,7 +333,6 @@ export default defineComponent({
     const cColumns = computed(() => {
       return props.columns.map((column, index) => {
         column.id = index + 1;
-        console.log(column);
         return column;
       });
     });
