@@ -213,7 +213,6 @@ import {
 import TableRow from "./TableRow.vue";
 import SelectAllRowsCheckbox from "./SelectAllRowsCheckBox.vue";
 import Pagination from "./CustomPagination.vue";
-import PaginationInfo from "./PaginationInfo.vue";
 import SimpleFilter from "./filters/SimpleFilter.vue";
 import MultiSelect from "./filters/MultiSelect.vue";
 import {
