@@ -173,30 +173,19 @@
 
         <tr v-if="showPaginationRow" class="footer-pagination-row">
           <td :colspan="headerColSpan">
-            <ion-row>
-              <ion-col size-md="8">
-                <pagination
-                  v-if="pagination"
-                  :currentPage="currentPage"
-                  :perPageItems="perPageItems"
-                  :perPageOptions="perPageOptions"
-                  :total="totalFilteredRows"
-                  :visibleButtons="visibleButtons"
-                  @updatePerPageItems="updatePerPageItems"
-                  @updateCurrentPage="updateCurrentPage"
-                />
-              </ion-col>
-              <ion-col size-md="4">
-                <PaginationInfo
-                  v-if="showPaginationInfo"
-                  :totalRows="totalRows"
-                  :totalFilteredRows="totalFilteredRows"
-                  :totalOriginalRows="totalOriginalRows"
-                  :showSelectedRowsInfo="showSelectedRowsInfo"
-                  :totalSelectedItems="totalSelectedItems"
-                />
-              </ion-col>
-            </ion-row>
+            <pagination
+              v-if="pagination"
+              :currentPage="currentPage"
+              :perPageItems="perPageItems"
+              :perPageOptions="perPageOptions"
+              :total="totalFilteredRows"
+              :visibleButtons="visibleButtons"
+              :totalOriginalRows="totalOriginalRows"
+              :showSelectedRowsInfo="showSelectedRowsInfo"
+              :totalSelectedItems="totalSelectedItems"
+              @updatePerPageItems="updatePerPageItems"
+              @updateCurrentPage="updateCurrentPage"
+            />
           </td>
         </tr>
       </tbody>
@@ -296,6 +285,7 @@ export default defineComponent({
     const selectedItems = ref<any[]>([]);
     const allRowsSelected = ref(false);
     const totalRows = computed(() => props.rows.length);
+    const totalCurrentPageRows = computed(() => cRows.value.length)
     const totalFilteredRows = computed(() =>
       serverMode.value ? totalRows.value : tempFilteredResults.value.length
     );
@@ -1215,6 +1205,7 @@ export default defineComponent({
       visibleButtons,
       perPageOptions,
       globalSearch,
+      totalCurrentPageRows,
       totalSelectedItems,
       totalOriginalRows,
       totalFilteredRows,
@@ -1252,7 +1243,6 @@ export default defineComponent({
     SimpleFilter,
     MultiSelect,
     Pagination,
-    PaginationInfo,
     TableColumnVue,
   },
 });
