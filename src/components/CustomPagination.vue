@@ -48,7 +48,19 @@
       >
         <span aria-hidden="true">&raquo;</span>
       </ion-button>
-      <ion-item color="primary" button>
+      <ion-item class="box" lines="none">
+        <ion-label>Go to page: </ion-label>
+        <ion-input
+          type="number"
+          min="1"
+          :max="totalPages"
+          :value="currentPage"
+          @ionChange="(e) => pageHandler(parseInt(e.target.value))"
+          style="max-width: 45px;"
+          :debounce="200"
+        />
+      </ion-item>
+      <ion-item class="box">
         <ion-label>items per page</ion-label>
         <ion-select :value="perPageItems" v-model="itemPerPage">
           <ion-select-option
@@ -72,6 +84,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonButton,
+  IonInput,
 } from "@ionic/vue";
 import {
   computed,
@@ -111,6 +124,7 @@ export default defineComponent({
     IonSelect,
     IonSelectOption,
     IonButton,
+    IonInput,
   },
   emits: ["updateCurrentPage", "updatePerPageItems"],
   setup(props, { emit }) {
@@ -118,7 +132,6 @@ export default defineComponent({
     const end = ref(0);
     const itemPerPage = computed({
       set: (value) => {
-        console.log(value)
         emit("updatePerPageItems", value)
       },
       get: () => props.perPageItems
@@ -130,13 +143,9 @@ export default defineComponent({
     const disableNextButton = computed(() => props.currentPage === end.value);
     const isEmpty = computed(() => props.total === 0);
     const range = computed(() => generateRange(start.value, end.value + 1));
-    const totalPages = computed(() =>
-      Math.ceil(props.total / props.perPageItems)
-    );
-    const perPageHandler = (option: any) => {
-      console.log(option);
-      emit("updatePerPageItems", option);
-    };
+    const totalPages = computed(() => Math.ceil(props.total / props.perPageItems));
+    const perPageHandler = (option: any) => emit("updatePerPageItems", option)
+
     const pageHandler = (index: number) => {
       if (index >= 1 && index <= totalPages.value) {
         emit("updateCurrentPage", index);
@@ -232,9 +241,7 @@ h6 {
 }
 
 ion-item {
-  --min-height: 12px;
-  margin-left: 0.1rem;
-  padding-left: 0.5rem;
-  font-size: small;
+  --min-height: 11px;
+  margin-left: .5rem;
 }
 </style>
