@@ -304,10 +304,6 @@ export default defineComponent({
       paginateFilter();
     };
 
-    const getCellSlotName = (column: ITableColumn) => {
-      return get(column, "slotName") || column.name.replace(/\./g, "_");
-    };
-
     const emitQueryParams = (page = null as null | number) => {
       if (serverMode.value && canEmitQueries.value) {
         let queryParams = cloneDeep(filterQuery);
@@ -559,7 +555,6 @@ export default defineComponent({
       updatePerPageItems,
       updateCurrentPage,
       getProperty: get,
-      getCellSlotName,
       canShowColumn,
       isSortableColumn,
       columnClasses,
