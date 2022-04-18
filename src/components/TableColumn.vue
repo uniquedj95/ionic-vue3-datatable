@@ -1,16 +1,11 @@
 <template>
-  <th
-    v-on="
-      isSortableColumn(column)
-        ? { click: () => $emit('updateSort', column) }
-        : {}
-    "
+  <th 
+    v-on="isSortable ? { click: () => $emit('updateSort', column) } : {}"
     :class="{ 'sort-cursor': isSortableColumn }"
   >
-    {{ column.label.toUpperCase() }}
-
+    {{ columnName }}
     <SortIcon
-      v-if="isSortableColumn(column)"
+      v-if="isSortable"
       :sort="query.sort"
       :column="column"
     ></SortIcon>
@@ -18,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue";
+import { computed, defineComponent, PropType } from "vue";
 import { isSortableColumn } from "@/utils/Table";
 import SortIcon from "@/components/SortIcon.vue"
 import { ITableColumn } from "@/interfaces/datatable";
@@ -36,9 +31,12 @@ export default defineComponent({
   },
   emits: ["updateSort"],
   components: { SortIcon },
-  setup() {
+  setup(props) {
+    const isSortable = computed(() => isSortableColumn(props.column));
+    const columnName = computed(() => props.column.label.toUpperCase());
     return {
-      isSortableColumn,
+      isSortable,
+      columnName,
     };
   },
 });

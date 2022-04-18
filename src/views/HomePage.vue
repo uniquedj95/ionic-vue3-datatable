@@ -65,37 +65,43 @@ export default defineComponent({
       {
         label: "id",
         name: "id",
-        sort: true,
+        sortable: true,
       },
       {
         label: "First Name",
         name: "firstName",
-        sort: true,
+        sortable: true,
         initialSort: false,
         sortCaseSensitive: false,
       },
       {
         label: "Last Name",
         name: "lastName",
-        sort: true,
+        sortable: true,
         initialSort: false,
         sortCaseSensitive: false,
       },
       {
         label: "Email Address",
         name: "email",
+        sortable: true,
+        sortCaseSensitive: false,
       },
       {
         label: "Phone",
         name: "mobile",
+        sortable: true
       },
       {
         label: "Age",
         name: "age",
+        sortable: true,
       },
       {
         label: "Country",
         name: "country",
+        sortable: true,
+        sortCaseSensitive: false,
       },
     ]);
 

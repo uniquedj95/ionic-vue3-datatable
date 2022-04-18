@@ -33,11 +33,10 @@ export interface ITableColumn {
   id?: string | number;
   visibility?: boolean;
   filter?: ITableColumnFilter;
-  sort?: boolean;
+  sortable?: boolean;
   initialSort?: boolean;
   initialSortOrder?: "asc" | "desc" | "none";
   sortCaseSensitive?: boolean;
-  slotName?: string;
   columnClasses?: string | Array<string>;
   rowClasses?: string | Array<string>;
   rowTextAlignment?: string;

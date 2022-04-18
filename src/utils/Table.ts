@@ -6,7 +6,7 @@ export function canShowColumn(column: ITableColumn){
 }
 
 export function isSortableColumn(column: ITableColumn){
-  return !!get(column, "sort");
+  return !!get(column, "sortable", false);
 }
 
 export function isColumnSorted(columnName: string, sortQuery = null as any){
