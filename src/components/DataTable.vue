@@ -116,36 +116,6 @@
         </tr>
       </thead>
       <tbody>
-        <!-- filter row starts here -->
-        <tr class="table-active" v-if="showFilterRow">
-          <td v-show="checkboxRows"></td>
-          <template v-for="(column, index) in cColumns">
-            <td v-if="canShowColumn(column)" :key="index" align="center">
-              <template v-if="hasFilter(column)">
-                <SimpleFilter
-                  v-if="column.filter?.type === 'simple'"
-                  :column="column"
-                  @updateFilter="updateFilter"
-                  @clearFilter="clearFilter"
-                >
-                </SimpleFilter>
-                <MultiSelect
-                  v-if="column.filter?.type === 'select'"
-                  :options="column.filter?.options"
-                  :column="column"
-                  @updateMultiSelectFilter="updateMultiSelectFilter"
-                  @clearFilter="clearFilter"
-                ></MultiSelect>
-                <template v-if="column.filter?.type === 'custom'">
-                  <slot :name="column.filter?.slotName" :column="column">
-                  </slot>
-                </template>
-              </template>
-            </td>
-          </template>
-        </tr>
-        <!-- filter row ends here -->
-
         <!-- data rows stars here -->
         <table-row
           v-for="(row, index) in cRows"
@@ -213,8 +183,6 @@ import {
 import TableRow from "./TableRow.vue";
 import SelectAllRowsCheckbox from "./SelectAllRowsCheckBox.vue";
 import Pagination from "./CustomPagination.vue";
-import SimpleFilter from "./filters/SimpleFilter.vue";
-import MultiSelect from "./filters/MultiSelect.vue";
 import {
   computed,
   defineComponent,
@@ -279,7 +247,6 @@ export default defineComponent({
     const updateCurrentPage = (page: number) => (currentPage.value = page);
     const perPageItems = ref(props.config.perPageItems || 10);
     const updatePerPageItems = (value: number) => (perPageItems.value = value);
-    const loaderText = ref(props.config.loaderText || "Loading...");
     const tempFilteredResults = ref<any[]>([]);
     const selectedItems = ref<any[]>([]);
     const allRowsSelected = ref(false);
@@ -385,17 +352,6 @@ export default defineComponent({
       );
     });
 
-    const showFilterRow = computed(() => {
-      let showRow = false;
-      cColumns.value.some((column) => {
-        if (has(column, "filter")) {
-          showRow = true;
-          return true;
-        }
-      });
-      return showRow;
-    });
-
     const showPaginationRow = computed(() => {
       return (
         pagination.value ||
@@ -486,30 +442,6 @@ export default defineComponent({
         });
     };
 
-    const updateFilter = (payload: any) => {
-      let value =
-        typeof payload.value === "number"
-          ? payload.value.toString()
-          : payload.value;
-
-      let column: TableColumn = payload.column;
-      let filterIndex = findIndex(query.value.filters, {
-        name: column.name,
-      });
-      if (filterIndex === -1 && value !== "") {
-        query.value.filters.push({
-          type: column.filter?.type,
-          name: column.name,
-          text: value.trim(),
-          config: column.filter,
-        });
-      } else if (value === "") {
-        query.value.filters.splice(filterIndex, 1);
-      } else {
-        query.value.filters[filterIndex].text = value.trim();
-      }
-    };
-
     const isMultiFilterMode = (filter: TableColumnFilter) => {
       return filter.mode === "multi" && isArray(filter.init?.value);
     };
@@ -520,34 +452,6 @@ export default defineComponent({
         Number.isInteger(filter.init?.value) &&
         filter.init?.value > -1
       );
-    };
-
-    const updateMultiSelectFilter = (payload: any) => {
-      let selectedOptions = payload.selectedOptions;
-      let column: TableColumn = payload.column;
-
-      let filterIndex = findIndex(query.value.filters, {
-        name: column.name,
-      });
-
-      if (filterIndex === -1) {
-        if (selectedOptions.length === 0) {
-          return;
-        }
-        query.value.filters.push({
-          type: column.filter?.type,
-          mode: column.filter?.mode,
-          name: column.name,
-          selectedOptions: selectedOptions,
-          config: column.filter,
-        });
-      } else {
-        if (selectedOptions.length === 0) {
-          query.value.filters.splice(filterIndex, 1);
-        } else {
-          query.value.filters[filterIndex].selectedOptions = selectedOptions;
-        }
-      }
     };
 
     const paginateFilter = () => {
@@ -573,23 +477,6 @@ export default defineComponent({
     const initGlobalSearch = () => {
       // this.$refs.globalSearch.value = globalSearch.value.init?.value;
       query.value.globalSearch = globalSearch.value.init?.value;
-    };
-
-    const hasFilter = (column: TableColumn) => {
-      return has(column, "filter.type");
-    };
-
-    const clearFilter = (column: TableColumn) => {
-      let filterIndex = getFilterIndex(column);
-      if (filterIndex !== -1) {
-        query.value.filters.splice(filterIndex, 1);
-      }
-    };
-
-    const getFilterIndex = (column: TableColumn) => {
-      return findIndex(query.value.filters, {
-        name: column.name,
-      });
     };
 
     const updateSortQuery = (column: TableColumn) => {
@@ -796,38 +683,6 @@ export default defineComponent({
         );
       }
       paginateFilter();
-    };
-
-    const initFilterQueries = () => {
-      cColumns.value &&
-        cColumns.value.forEach((column) => {
-          if (!column.filter || !column.filter.init?.value) return;
-
-          if (column.filter.type == "simple") {
-            updateFilter({
-              value: column.filter.init.value,
-              column: column,
-            });
-          } else if (column.filter.type == "select") {
-            let initialValues: any[] = [];
-            if (isMultiFilterMode(column.filter)) {
-              initialValues = column.filter.init.value;
-            } else if (isSingleFilterMode(column.filter)) {
-              initialValues = [column.filter.init.value];
-            }
-
-            let selectedOptions =
-              column.filter?.options &&
-              column.filter?.options
-                .filter((_, index) => initialValues.includes(index))
-                .map((option) => option.value);
-
-            updateMultiSelectFilter({
-              selectedOptions: selectedOptions,
-              column: column,
-            });
-          }
-        });
     };
 
     const searchGlobally = (rows: any[]) => {
@@ -1112,14 +967,6 @@ export default defineComponent({
     );
 
     watch(
-      () => props.columns,
-      () => initFilterQueries(),
-      {
-        deep: true,
-      }
-    );
-
-    watch(
       cRows,
       (newVal) => {
         lastSelectedItemIndex.value = -1;
@@ -1154,7 +1001,6 @@ export default defineComponent({
 
     onMounted(() => {
       initialSort();
-      initFilterQueries();
       if (globalSearch.value.visibility) {
         nextTick(() => {
           initGlobalSearch();
@@ -1184,7 +1030,6 @@ export default defineComponent({
       selectedItems,
       allRowsSelected,
       serverMode,
-      loaderText,
       checkboxRows,
       rowsSelectable,
       multiColumnSort,
@@ -1212,7 +1057,6 @@ export default defineComponent({
       isResponsive,
       isSelectable,
       showPaginationRow,
-      showFilterRow,
       updateGlobalSearch,
       updatePerPageItems,
       updateCurrentPage,
@@ -1220,11 +1064,7 @@ export default defineComponent({
       getCellSlotName,
       handleRemoveRow,
       handleAddRow,
-      clearFilter,
-      updateMultiSelectFilter,
       updateGlobalSearchHandler,
-      updateFilter,
-      hasFilter,
       canShowColumn,
       isSortableColumn,
       columnClasses,
@@ -1239,8 +1079,6 @@ export default defineComponent({
   components: {
     TableRow,
     SelectAllRowsCheckbox,
-    SimpleFilter,
-    MultiSelect,
     Pagination,
     TableColumnVue,
   },
