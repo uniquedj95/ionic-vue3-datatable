@@ -16,3 +16,7 @@ export function isColumnSorted(columnName: string, sortQuery = null as any){
     sortQuery.name === columnName
   );
 }
+
+export function getRowValue(row: Record<string, any>, path: string) {
+  return get(row, path, '')
+}
