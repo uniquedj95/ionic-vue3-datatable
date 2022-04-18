@@ -232,11 +232,10 @@ export default defineComponent({
       cColumns.value
         .filter((column) => !!column.initialSort)
         .some((column) => {
-          let result = findIndex(filterQuery.sort, { id: column.id });
+          let result = findIndex(filterQuery.sort, { name: column.name });
           if (result === -1) {
             const initialSortOrder = get(column, "initialSortOrder", "asc");
             filterQuery.sort.push({
-              id: column.id,
               name: column.name,
               order: initialSortOrder,
               caseSensitive: isSortCaseSensitive(column),

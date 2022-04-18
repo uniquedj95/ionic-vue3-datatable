@@ -9,14 +9,6 @@ export function isSortableColumn(column: ITableColumn){
   return !!get(column, "sortable", false);
 }
 
-export function isColumnSorted(columnName: string, sortQuery = null as any){
-  return (
-    sortQuery &&
-    sortQuery.name &&
-    sortQuery.name === columnName
-  );
-}
-
 export function getRowValue(row: Record<string, any>, path: string) {
   return get(row, path, '')
 }
