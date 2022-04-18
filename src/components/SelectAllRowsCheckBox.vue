@@ -5,8 +5,7 @@
         type="checkbox"
         :indeterminate.prop="showIndeterminateState"
         class="custom-control-input checkbox"
-        v-model="cAllRowsSelected"
-        value=""
+        :value="allRowsSelected"
       />
       <label class="custom-control-label"></label>
     </div>
@@ -32,13 +31,9 @@ export default defineComponent({
     const showIndeterminateState = computed(() => {
       return !props.allRowsSelected && props.currentPageSelectionCount > 0;
     });
-    const cAllRowsSelected = computed({
-      set: () => emit("selectAll"),
-      get: () => props.allRowsSelected
-    })
+    
     return {
-      showIndeterminateState,
-      cAllRowsSelected
+      showIndeterminateState
     };
   },
 });
