@@ -260,17 +260,14 @@ export default defineComponent({
 
     const updateSortQuery = (column: ITableColumn) => {
       let result = findIndex(filterQuery.sort, {
-        id: column.id,
+        name: column.name,
       });
-
-      console.log(result)
 
       if (result === -1) {
         if (!multiColumnSort.value) {
           filterQuery.sort = [];
         }
         filterQuery.sort.push({
-          id: column.id,
           name: column.name,
           order: "asc",
           caseSensitive: isSortCaseSensitive(column),
@@ -419,18 +416,8 @@ export default defineComponent({
       { deep: true }
     );
 
-    watch(
-      filterQuery.sort,
-      () => {
-        if (!serverMode.value) {
-          sort();
-        }
-      },
-      { deep: true }
-    );
-
-    watch(filterQuery, () => {
-      if (serverMode.value) emitQueryParams(), { deep: true };
+    watch(filterQuery, () =>  serverMode.value ? emitQueryParams() : sort(), { 
+      deep: true 
     });
 
     watch(perPageItems, () => {
