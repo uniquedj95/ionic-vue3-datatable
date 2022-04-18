@@ -2,107 +2,7 @@
   <div :class="tableWrapperClasses">
     <table class="table" :class="tableClasses">
       <thead>
-        <tr v-if="showToolsRow" class="table-tools">
-          <th :colspan="headerColSpan">
-            <ion-grid>
-              <ion-row>
-                <ion-col size-md="4">
-                  <ion-row>
-                    <ion-col
-                      size-md="6"
-                      v-if="(globalSearch && globalSearch.visibility) || true"
-                    >
-                      <div
-                        class="form-group has-clear-right"
-                        :class="globalSearch.class"
-                      >
-                        <span
-                          v-if="globalSearch.showClearButton"
-                          class="form-control-feedback global-search-clear"
-                          @click="clearGlobalSearch"
-                        >
-                          <ion-icon :icon="closeCircle"></ion-icon>
-                        </span>
-                        <input
-                          v-if="globalSearch.searchOnPressEnter"
-                          ref="globalSearch"
-                          type="text"
-                          class="form-control"
-                          :placeholder="globalSearch.placeholder"
-                          @keyup.enter="
-                            updateGlobalSearchHandler($event.target?.value)
-                          "
-                        />
-                        <input
-                          v-else
-                          ref="globalSearch"
-                          type="text"
-                          class="form-control"
-                          :placeholder="globalSearch.placeholder"
-                          @keyup.stop="updateGlobalSearch($event.target?.value)"
-                        />
-                      </div>
-                    </ion-col>
-                    <ion-col size-md="4">
-                      <div
-                        class="btn-group"
-                        role="group"
-                        aria-label="Table Actions buttons"
-                      >
-                        <button
-                          v-if="showRefreshButton"
-                          type="button"
-                          class="btn btn-secondary refresh-button"
-                          @click="$emit('refresh-data')"
-                        >
-                          <slot name="refresh-button-text"> Refresh </slot>
-                        </button>
-                        <button
-                          type="button"
-                          v-if="showResetButton"
-                          class="btn btn-secondary reset-button"
-                          @click="resetQuery"
-                        >
-                          <slot name="reset-button-text"> Reset Query </slot>
-                        </button>
-                      </div>
-                    </ion-col>
-                  </ion-row>
-                </ion-col>
-                <ion-col size-md="8">
-                  <slot name="action-buttons">
-                    <div
-                      class="btn-group float-right"
-                      role="group"
-                      aria-label="Basic example"
-                    >
-                      <button
-                        v-for="(action, index) in actions"
-                        :key="index"
-                        type="button"
-                        class="btn"
-                        :class="getActionButtonClass(action)"
-                        @click="emitActionEvent(action)"
-                      >
-                        <slot :name="action.label">
-                          <span v-html="action.label"></span>
-                        </slot>
-                      </button>
-                    </div>
-                  </slot>
-                </ion-col>
-              </ion-row>
-            </ion-grid>
-          </th>
-        </tr>
-
         <tr>
-          <SelectAllRowsCheckbox
-            v-if="checkboxRows"
-            :allRowsSelected="allRowsSelected"
-            :currentPageSelectionCount="currentPageSelectionCount"
-            @selectAll="selectAllCheckbox"
-          />
           <template v-for="(column, index) in cColumns">
             <TableColumnVue
               v-if="canShowColumn(column)"
@@ -123,16 +23,10 @@
           :row="row"
           :columns="cColumns"
           :rowIndex="index"
-          :checkboxRows="checkboxRows"
-          :rowsSelectable="rowsSelectable"
-          :selectedItems="selectedItems"
           :highlightRowHover="highlightRowHover"
           :highlightRowHoverColor="highlightRowHoverColor"
           :propRowClasses="classes.row"
           :propCellClasses="classes.cell"
-          :uniqueId="uniqueId"
-          @addRow="handleAddRow"
-          @removeRow="handleRemoveRow"
         ></table-row>
 
         <tr v-show="cRows.length === 0">
@@ -152,7 +46,6 @@
               :visibleButtons="visibleButtons"
               :totalOriginalRows="totalOriginalRows"
               :showSelectedRowsInfo="showSelectedRowsInfo"
-              :totalSelectedItems="totalSelectedItems"
               @updatePerPageItems="updatePerPageItems"
               @updateCurrentPage="updateCurrentPage"
             />
@@ -165,13 +58,7 @@
 
 <script lang="ts">
 import {
-  isEqual,
-  debounce,
   cloneDeep,
-  differenceWith,
-  differenceBy,
-  intersectionWith,
-  intersectionBy,
   orderBy,
   get,
   omit,
@@ -248,34 +135,23 @@ export default defineComponent({
     const perPageItems = ref(props.config.perPageItems || 10);
     const updatePerPageItems = (value: number) => (perPageItems.value = value);
     const tempFilteredResults = ref<any[]>([]);
-    const selectedItems = ref<any[]>([]);
-    const allRowsSelected = ref(false);
     const totalRows = computed(() => props.rows.length);
     const totalCurrentPageRows = computed(() => cRows.value.length)
     const totalFilteredRows = computed(() =>
       serverMode.value ? totalRows.value : tempFilteredResults.value.length
     );
-    const totalSelectedItems = computed(() => selectedItems.value.length);
     const totalFilteredResults = computed(
       () => tempFilteredResults.value.length
     );
     const totalOriginalRows = computed(() =>
       serverMode.value ? totalFilteredRows.value : props.rows.length
     );
-    const lastSelectedItemIndex = ref(0);
     const isFirstTime = ref(true);
     const isResponsive = ref(true);
     const canEmitQueries = ref(false);
     const serverMode = ref(get(props.config, "serverMode", false));
-    const checkboxRows = ref(get(props.config, "checkboxRows", false));
-    const rowsSelectable = ref(get(props.config, "rowsSelectable", false));
     const multiColumnSort = ref(get(props.config, "multiColumnSort", false));
     const showPaginationInfo = ref(get(props.config, "paginationInfo", true));
-    const showSelectedRowsInfo = ref(
-      get(props.config, "selectedRowsInfo", false)
-    );
-    const showRefreshButton = ref(get(props.config, "showRefreshButton", true));
-    const showResetButton = ref(get(props.config, "showResetButton", true));
     const highlightRowHover = ref(get(props.config, "highlightRowHover", true));
     const preservePageOnDataChange = computed<boolean>(() =>
       get(props.config, "preservePageOnDataChange", false)
@@ -299,23 +175,8 @@ export default defineComponent({
         : "";
     });
 
-    const uniqueId = computed(() => {
-      let uniqueId = "";
-      if (!hasUniqueId.value) {
-        uniqueId = "id";
-        return uniqueId;
-      }
-      cColumns.value.some((column) => {
-        if (get(column, "uniqueId")) {
-          uniqueId = column.name;
-          return true;
-        }
-      });
-      return uniqueId;
-    });
-
     const headerColSpan = computed(() => {
-      let count = checkboxRows.value ? 1 : 0;
+      let count = 0;
       count += cColumns.value.filter((column) => canShowColumn(column)).length;
       return count;
     });
@@ -343,20 +204,10 @@ export default defineComponent({
       init: get(props.config, "globalSearch.init.value", ""),
     });
 
-    const showToolsRow = computed(() => {
-      return (
-        globalSearch.value.visibility ||
-        showRefreshButton ||
-        showResetButton ||
-        props.actions.length > 0
-      );
-    });
-
     const showPaginationRow = computed(() => {
       return (
         pagination.value ||
-        showPaginationInfo.value ||
-        showSelectedRowsInfo.value
+        showPaginationInfo.value 
       );
     });
 
@@ -373,37 +224,6 @@ export default defineComponent({
     const tableWrapperClasses = computed(() =>
       get(props.classes, "tableWrapper", "table-responsive")
     );
-
-    const isSelectable = computed(
-      () => checkboxRows.value || rowsSelectable.value
-    );
-
-    const updateGlobalSearch = computed(() =>
-      debounce(updateGlobalSearchHandler, globalSearch.value.searchDebounceRate)
-    );
-
-    const hasUniqueId = computed(() => {
-      cColumns.value.some((column) => {
-        if (get(column, "uniqueId")) {
-          return true;
-        }
-      });
-      return false;
-    });
-
-    const currentPageSelectionCount = computed(() => {
-      let result = [];
-      if (serverMode.value && !hasUniqueId.value) {
-        result = intersectionWith(cRows.value, selectedItems.value, isEqual);
-      } else {
-        result = intersectionBy(
-          cRows.value,
-          selectedItems.value,
-          uniqueId.value
-        );
-      }
-      return result.length;
-    });
 
     const originalRows = computed(() =>
       cRows.value.map((row, i) => {
@@ -442,18 +262,6 @@ export default defineComponent({
         });
     };
 
-    const isMultiFilterMode = (filter: TableColumnFilter) => {
-      return filter.mode === "multi" && isArray(filter.init?.value);
-    };
-
-    const isSingleFilterMode = (filter: TableColumnFilter) => {
-      return (
-        filter.mode === "single" &&
-        Number.isInteger(filter.init?.value) &&
-        filter.init?.value > -1
-      );
-    };
-
     const paginateFilter = () => {
       if (pagination.value) {
         let start = (currentPage.value - 1) * perPageItems.value;
@@ -462,21 +270,6 @@ export default defineComponent({
       } else {
         cRows.value = cloneDeep(tempFilteredResults.value);
       }
-    };
-
-    const selectAllCheckbox = () => {
-      if (allRowsSelected.value || currentPageSelectionCount.value > 0) {
-        unSelectAllItems();
-        allRowsSelected.value = false;
-      } else {
-        selectAllItems();
-        allRowsSelected.value = true;
-      }
-    };
-
-    const initGlobalSearch = () => {
-      // this.$refs.globalSearch.value = globalSearch.value.init?.value;
-      query.value.globalSearch = globalSearch.value.init?.value;
     };
 
     const updateSortQuery = (column: TableColumn) => {
@@ -500,171 +293,9 @@ export default defineComponent({
       }
     };
 
-    const isShiftSelection = (shiftKey: boolean, rowIndex: number) => {
-      return (
-        shiftKey === true &&
-        lastSelectedItemIndex.value !== null &&
-        lastSelectedItemIndex.value !== rowIndex
-      );
-    };
-
-    const handleAddRow = (payload: any) => {
-      let row = cRows.value[payload.rowIndex];
-      if (isShiftSelection(payload.shiftKey, payload.rowIndex)) {
-        let rows = getShiftSelectionRows(payload.rowIndex);
-        rows.forEach((_row: any) => {
-          addSelectedItem(_row);
-        });
-      } else {
-        addSelectedItem(row);
-      }
-
-      emit("selectRow", {
-        selectedItems: cloneDeep(selectedItems.value),
-        selectedItem: row,
-      });
-
-      let difference = [];
-
-      if (serverMode.value && !hasUniqueId.value) {
-        difference = differenceWith(cRows.value, selectedItems.value, isEqual);
-      } else {
-        difference = differenceBy(
-          cRows.value,
-          selectedItems.value,
-          uniqueId.value
-        );
-      }
-
-      allRowsSelected.value = difference.length === 0;
-      lastSelectedItemIndex.value = payload.rowIndex;
-    };
-
-    const getActionButtonClass = (action: any): string => {
-      return get(action, "class", " btn-secondary");
-    };
-
-    const handleRemoveRow = (payload: any) => {
-      let row = cRows.value[payload.rowIndex];
-      if (isShiftSelection(payload.shiftKey, payload.rowIndex)) {
-        let rows = getShiftSelectionRows(payload.rowIndex);
-        rows.forEach((_row: any) => {
-          removeSelectedItem(_row);
-        });
-      } else {
-        removeSelectedItem(row);
-      }
-      emit("unselectRow", {
-        selectedItems: cloneDeep(selectedItems.value),
-        unselectedItem: row,
-      });
-      // EventBus.$emit('unselect-select-all-items-checkbox');
-      allRowsSelected.value = false;
-      lastSelectedItemIndex.value = payload.rowIndex;
-    };
-
-    const addSelectedItem = (item: any) => {
-      let index = -1;
-      if (serverMode.value && !hasUniqueId.value) {
-        index = findIndex(selectedItems.value, (selectedItem) => {
-          return isEqual(selectedItem, item);
-        });
-      } else {
-        index = findIndex(selectedItems.value, (selectedItem) => {
-          return selectedItem[uniqueId.value] == item[uniqueId.value];
-        });
-      }
-
-      if (index == -1) {
-        selectedItems.value.push(item);
-      }
-    };
-
-    const selectAllItems = () => {
-      const difference =
-        serverMode.value && !hasUniqueId.value
-          ? differenceWith(cRows.value, selectedItems.value, isEqual)
-          : differenceBy(cRows.value, selectedItems.value, uniqueId.value);
-
-      selectedItems.value.push(...difference);
-
-      emit("selectAllRows", {
-        selectedItems: cloneDeep(selectedItems.value),
-      });
-    };
-
-    const unSelectAllItems = () => {
-      let difference = [];
-
-      if (serverMode.value && !hasUniqueId.value) {
-        const result = intersectionWith(
-          cRows.value,
-          selectedItems.value,
-          isEqual
-        );
-        difference = differenceWith(selectedItems.value, result, isEqual);
-      } else {
-        const result = intersectionBy(
-          cRows.value,
-          selectedItems.value,
-          uniqueId.value
-        );
-        difference = differenceBy(selectedItems.value, result, uniqueId.value);
-      }
-
-      selectedItems.value = difference;
-
-      emit("unselectAllRows", {
-        selectedItems: cloneDeep(selectedItems.value),
-      });
-    };
-
-    const removeSelectedItem = (item: any) => {
-      selectedItems.value.some((selectedItem, index) => {
-        if (isEqual(item, selectedItem)) {
-          selectedItems.value.splice(index, 1);
-          return true;
-        }
-      });
-    };
-
-    const getShiftSelectionRows = (rowIndex: number) => {
-      let start = 0;
-      let end = 0;
-      if (lastSelectedItemIndex.value < rowIndex) {
-        start = lastSelectedItemIndex.value;
-        end = rowIndex + 1;
-      } else if (lastSelectedItemIndex.value > rowIndex) {
-        start = rowIndex;
-        end = lastSelectedItemIndex.value + 1;
-      }
-      return cRows.value.slice(start, end);
-    };
-
     const resetSort = () => {
       query.value.sort = [];
       filter(!preservePageOnDataChange.value);
-    };
-
-    const updateGlobalSearchHandler = (value: any) => {
-      query.value.globalSearch = value;
-    };
-
-    const clearGlobalSearch = () => {
-      query.value.globalSearch = "";
-      // this.$refs.globalSearch.value = "";
-    };
-
-    const resetQuery = () => {
-      query.value = {
-        sort: [],
-        filters: [],
-        globalSearch: "",
-      };
-
-      // globalSearch.value.visibility && (this.$refs.globalSearch.value = "");
-
-      emit("resetQuery");
     };
 
     const sort = () => {
@@ -683,54 +314,6 @@ export default defineComponent({
         );
       }
       paginateFilter();
-    };
-
-    const searchGlobally = (rows: any[]) => {
-      let globalSearchResults = rows.filter((row) => {
-        let flag = false;
-
-        cColumns.value.some((column) => {
-          let value: string = get(row, column.name, "");
-          let globalSearchText = query.value.globalSearch;
-
-          if (!globalSearch.value.caseSensitive) {
-            value = value.toLowerCase();
-            globalSearchText = globalSearchText.toLowerCase();
-          }
-
-          if (value.indexOf(globalSearchText) > -1) {
-            flag = true;
-            return;
-          }
-        });
-
-        return flag;
-      });
-
-      return globalSearchResults;
-    };
-
-    const simpleFilter = (
-      value: string,
-      filterText: string,
-      config: GlobalSearchConfig
-    ) => {
-      if (!get(config, "caseSensitive", false)) {
-        value = value.toLowerCase();
-        filterText = filterText.toLowerCase();
-      }
-      return value.indexOf(filterText) > -1;
-    };
-
-    const multiSelectFilter = (value: string, selectedOptions: any[]) => {
-      value = value.toLowerCase();
-
-      selectedOptions = selectedOptions.map((option) => {
-        return typeof option !== "string"
-          ? option.toString().toLowerCase()
-          : option.toLowerCase();
-      });
-      return selectedOptions.includes(value);
     };
 
     const getCellSlotName = (column: TableColumn) => {
@@ -803,10 +386,6 @@ export default defineComponent({
         eventPayload: cloneDeep(action.eventPayload),
       };
 
-      if (isSelectable.value) {
-        payload.selectedItems = cloneDeep(selectedItems.value);
-      }
-
       emit(action.eventName, payload);
     };
 
@@ -814,27 +393,7 @@ export default defineComponent({
       let res = originalRows.value.filter((row) => {
         let flag = true;
         query.value.filters.some((filter) => {
-          if (filter.type === "simple") {
-            if (
-              simpleFilter(get(row, filter.name), filter.text, filter.config)
-            ) {
-              // continue to next filter
-              flag = true;
-            } else {
-              // stop here and break loop since one filter has failed
-              flag = false;
-              return true;
-            }
-          } else if (filter.type === "select") {
-            if (
-              multiSelectFilter(get(row, filter.name), filter.selected_options)
-            ) {
-              flag = true;
-            } else {
-              flag = false;
-              return true;
-            }
-          } else if (filter.type === "custom") {
+           if (filter.type === "custom") {
             let index = findIndex(cColumns.value, { name: filter.name });
             if (index > -1) {
               let column = cColumns.value[index];
@@ -861,9 +420,6 @@ export default defineComponent({
       });
 
       tempFilteredResults.value = res;
-      if (query.value.globalSearch !== "" && !!totalFilteredRows.value) {
-        tempFilteredResults.value = searchGlobally(tempFilteredResults.value);
-      }
 
       sort();
       if (resetPage || totalFilteredRows.value === 0) {
@@ -966,26 +522,6 @@ export default defineComponent({
       { deep: true }
     );
 
-    watch(
-      cRows,
-      (newVal) => {
-        lastSelectedItemIndex.value = -1;
-
-        if (selectedItems.value.length === 0) {
-          allRowsSelected.value = false;
-          return;
-        }
-
-        let difference =
-          serverMode.value && !hasUniqueId.value
-            ? differenceWith(newVal, selectedItems.value, isEqual)
-            : differenceBy(newVal, selectedItems.value, uniqueId.value);
-
-        allRowsSelected.value = difference.length === 0;
-      },
-      { deep: true }
-    );
-
     watch(currentPage, (newVal) => {
       if (!serverMode.value) {
         paginateFilter();
@@ -1001,11 +537,6 @@ export default defineComponent({
 
     onMounted(() => {
       initialSort();
-      if (globalSearch.value.visibility) {
-        nextTick(() => {
-          initGlobalSearch();
-        });
-      }
 
       nextTick(() => {
         if (!serverMode.value) {
@@ -1024,61 +555,40 @@ export default defineComponent({
       cRows,
       cColumns,
       query,
-      uniqueId,
       currentPage,
       perPageItems,
-      selectedItems,
-      allRowsSelected,
       serverMode,
-      checkboxRows,
-      rowsSelectable,
       multiColumnSort,
       showPaginationInfo,
       highlightRowHover,
       highlightRowHoverColor,
-      showSelectedRowsInfo,
-      showRefreshButton,
-      showResetButton,
       preservePageOnDataChange,
       totalFilteredResults,
       tableWrapperClasses,
       tableClasses,
-      showToolsRow,
       headerColSpan,
       pagination,
       visibleButtons,
       perPageOptions,
       globalSearch,
       totalCurrentPageRows,
-      totalSelectedItems,
       totalOriginalRows,
       totalFilteredRows,
-      currentPageSelectionCount,
       isResponsive,
-      isSelectable,
       showPaginationRow,
-      updateGlobalSearch,
       updatePerPageItems,
       updateCurrentPage,
       getProperty: get,
       getCellSlotName,
-      handleRemoveRow,
-      handleAddRow,
-      updateGlobalSearchHandler,
       canShowColumn,
       isSortableColumn,
       columnClasses,
       updateSortQuery,
-      selectAllCheckbox,
       emitActionEvent,
-      getActionButtonClass,
-      resetQuery,
-      clearGlobalSearch,
     };
   },
   components: {
     TableRow,
-    SelectAllRowsCheckbox,
     Pagination,
     TableColumnVue,
   },

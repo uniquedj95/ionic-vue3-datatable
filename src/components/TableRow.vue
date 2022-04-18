@@ -1,18 +1,12 @@
 <template>
   <tr
-    :data-id="rowId"
+    :data-id="row.rowId"
     ref="row"
-    v-bind:style="{ background: rowHighlighted ? highlightRowHoverColor : '' }"
+    :style="{ background: rowHighlighted ? highlightRowHoverColor : '', cursor: rowHighlighted ? 'pointer' : '' }"
     :class="rowClasses"
-    v-on="rowsSelectable ? { click: (e) => handleRowSelect(e) } : {}"
+    @mouseenter="rowHighlighted = true"
+    @mouseleave="rowHighlighted = false"
   >
-    <CheckBox
-      v-if="checkboxRows"
-      :rowsSelectable="rowsSelectable"
-      :rowSelected="rowSelected"
-      @addRow="addRow"
-      @removeRow="removeRow"
-    />
     <template v-for="(column, index) in columns">
       <td
         v-if="canShowColumn(column)"
@@ -26,24 +20,19 @@
 </template>
 
 <script lang="ts">
-import CheckBox from "./CheckBox.vue";
 import {
   computed,
   defineComponent,
   onMounted,
   PropType,
-  watch,
   ref,
 } from "vue";
-import { differenceWith, isEqual, get, isArray, isEmpty } from "lodash";
+import { isArray, isEmpty } from "lodash";
 import { TableColumn } from "@/interfaces/datatable";
 import useEmitter from "@/composables/useEmitter";
 import { canShowColumn, getRowValue } from "@/utils/Table";
 
 export default defineComponent({
-  components: {
-    CheckBox,
-  },
   props: {
     row: {
       type: Object as PropType<any>,
@@ -61,18 +50,6 @@ export default defineComponent({
       type: Object as PropType<TableColumn[]>,
       default: () => [] as Array<TableColumn>,
     },
-    uniqueId: {
-      type: [Number, String],
-      required: true,
-    },
-    selectedItems: {
-      type: Object as PropType<any[]>,
-      default: () => [] as Array<any>,
-    },
-    checkboxRows: {
-      type: Boolean,
-      default: false,
-    },
     highlightRowHover: {
       type: Boolean,
       default: false,
@@ -81,22 +58,16 @@ export default defineComponent({
       type: String,
       default: "#d6d6d6",
     },
-    rowsSelectable: {
-      type: Boolean,
-      default: false,
-    },
     rowIndex: {
       type: Number,
       required: true,
     },
   },
-  emits: ["addRow", "removeRow"],
-  setup(props, { emit }) {
+  setup(props) {
     const emmitter = useEmitter();
     const rowSelected = ref(false);
     const rowHighlighted = ref(false);
     const rowHover = (state: boolean) => (rowHighlighted.value = state);
-    const rowId = computed(() => get(props.row, props.uniqueId));
     const rowClasses = computed(() => {
       let classes =
         isArray(props.propRowClasses) && !isEmpty(props.propRowClasses)
@@ -106,33 +77,6 @@ export default defineComponent({
       if (rowSelected.value) classes += " row-selected";
       return classes;
     });
-
-    const addRow = (shiftKey: any) =>
-      emit("addRow", {
-        shiftKey: shiftKey,
-        rowIndex: props.rowIndex,
-      });
-
-    const removeRow = (shiftKey: any) =>
-      emit("removeRow", {
-        shiftKey: shiftKey,
-        rowIndex: props.rowIndex,
-      });
-
-    const handleRowSelect = (event: any) => {
-      if (rowSelected.value) {
-        removeRow(event.shiftKey);
-      } else {
-        addRow(event.shiftKey);
-      }
-      rowSelected.value = !rowSelected.value;
-    };
-
-    const checkInSelecteditems = (selectedItems: Array<any>, row: any) => {
-      if (!props.checkboxRows && !props.rowsSelectable) return;
-      let difference = differenceWith(selectedItems, [row], isEqual);
-      rowSelected.value = difference.length !== selectedItems.length;
-    };
 
     const cellClasses = (column: TableColumn) => {
       if (typeof props.propCellClasses === "string") {
@@ -164,38 +108,13 @@ export default defineComponent({
       return column.name.replace(/\./g, "_");
     };
 
-    watch(
-      props.row,
-      (newVal) => checkInSelecteditems(props.selectedItems, newVal),
-      { deep: true }
-    );
-    watch(
-      props.selectedItems,
-      (newArr) => checkInSelecteditems(newArr, props.row),
-      { deep: true }
-    );
-
-    onMounted(() => {
-      if (props.highlightRowHover) {
-        emmitter.on("mouseover", () => (rowHighlighted.value = true));
-        emmitter.on("mouseleave", () => (rowHighlighted.value = false));
-      }
-      checkInSelecteditems(props.selectedItems, props.row);
-    });
-
     return {
-      rowSelected,
       rowHighlighted,
-      rowId,
       rowClasses,
       cellClasses,
       canShowColumn,
       getRowValue,
       rowHover,
-      addRow,
-      removeRow,
-      handleRowSelect,
-      checkInSelecteditems,
       getCellSlotName,
     };
   },

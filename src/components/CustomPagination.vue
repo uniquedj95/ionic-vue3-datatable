@@ -85,9 +85,6 @@
           </template>
           <template v-else> No results found </template>
           <template> ({{ totalOriginalRows }} total records) </template>
-          <template v-if="showSelectedRowsInfo">
-            &nbsp;|&nbsp; {{ totalSelectedItems }} rows selected
-          </template>
         </div>
       </ion-col>
     </ion-row>
@@ -134,14 +131,6 @@ export default defineComponent({
     perPageOptions: {
       type: Object as PropType<number[]>,
       default: () => [5, 10, 15] as Array<number>,
-    },
-    showSelectedRowsInfo: {
-      type: Boolean,
-      default: false,
-    },
-    totalSelectedItems: {
-      type: Number,
-      default: 0,
     },
     totalOriginalRows: {
       type: Number,
