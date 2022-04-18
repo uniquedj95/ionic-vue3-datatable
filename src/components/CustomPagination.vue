@@ -81,7 +81,7 @@
       <ion-col size="4">
         <div class="pagination-info">
           <template v-if="total !== 0">
-            From {{ fromEntries }} to {{ endOfEntries }} of {{ total }} entries
+            Showing {{ fromEntries }} to {{ endOfEntries }} of {{ total }} entries
           </template>
           <template v-else> No results found </template>
           <template> ({{ totalOriginalRows }} total records) </template>
