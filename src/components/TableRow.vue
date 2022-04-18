@@ -1,18 +1,13 @@
 <template>
   <tr
     :data-id="row.rowId"
-    ref="row"
-    :style="{ background: rowHighlighted ? highlightRowHoverColor : '', cursor: rowHighlighted ? 'pointer' : '' }"
+    :style="rowHighlightedStyles"
     :class="rowClasses"
     @mouseenter="rowHighlighted = true"
     @mouseleave="rowHighlighted = false"
   >
     <template v-for="(column, index) in columns">
-      <td
-        v-if="canShowColumn(column)"
-        :key="index"
-        :class="cellClasses(column)"
-      >
+      <td v-if="canShowColumn(column)" :key="index" :class="cellClasses(column)" >
         {{ getRowValue(row, column.name) }}
       </td>
     </template>
@@ -23,13 +18,11 @@
 import {
   computed,
   defineComponent,
-  onMounted,
   PropType,
   ref,
 } from "vue";
 import { isArray, isEmpty } from "lodash";
-import { TableColumn } from "@/interfaces/datatable";
-import useEmitter from "@/composables/useEmitter";
+import { ITableColumn } from "@/interfaces/datatable";
 import { canShowColumn, getRowValue } from "@/utils/Table";
 
 export default defineComponent({
@@ -47,8 +40,8 @@ export default defineComponent({
       required: false,
     },
     columns: {
-      type: Object as PropType<TableColumn[]>,
-      default: () => [] as Array<TableColumn>,
+      type: Object as PropType<ITableColumn[]>,
+      default: () => [] as Array<ITableColumn>,
     },
     highlightRowHover: {
       type: Boolean,
@@ -64,21 +57,19 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const emmitter = useEmitter();
-    const rowSelected = ref(false);
     const rowHighlighted = ref(false);
-    const rowHover = (state: boolean) => (rowHighlighted.value = state);
+    const rowHighlightedStyles = computed(() => rowHighlighted.value 
+      ? { background: props.highlightRowHoverColor, cursor: 'pointer' }
+      : {}
+    );
+      
     const rowClasses = computed(() => {
-      let classes =
-        isArray(props.propRowClasses) && !isEmpty(props.propRowClasses)
+      return isArray(props.propRowClasses) && !isEmpty(props.propRowClasses)
           ? props.propRowClasses.toString().replace(",", " ")
           : props.propRowClasses;
-
-      if (rowSelected.value) classes += " row-selected";
-      return classes;
     });
 
-    const cellClasses = (column: TableColumn) => {
+    const cellClasses = (column: ITableColumn) => {
       if (typeof props.propCellClasses === "string") {
         return props.propCellClasses;
       }
@@ -103,19 +94,13 @@ export default defineComponent({
       return classes;
     };
 
-    const getCellSlotName = (column: TableColumn) => {
-      if (column.slotName) return column.slotName;
-      return column.name.replace(/\./g, "_");
-    };
-
     return {
+      rowHighlightedStyles,
       rowHighlighted,
       rowClasses,
       cellClasses,
       canShowColumn,
       getRowValue,
-      rowHover,
-      getCellSlotName,
     };
   },
 });

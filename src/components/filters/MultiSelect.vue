@@ -51,14 +51,14 @@ import {
   ref,
   watch,
 } from "vue";
-import { TableColumn } from "@/interfaces/datatable";
+import { ITableColumn } from "@/interfaces/datatable";
 import useEmitter from "@/composables/useEmitter";
 import { range } from "lodash";
 
 export default defineComponent({
   props: {
     column: {
-      type: Object as PropType<TableColumn>,
+      type: Object as PropType<ITableColumn>,
       default: () => ({}),
     },
     options: {

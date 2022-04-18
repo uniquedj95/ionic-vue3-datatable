@@ -1,9 +1,9 @@
-export interface SelectAllCheckbox {
+export interface ISelectAllCheckbox {
   visibility: boolean;
   text: string;
 }
 
-export interface TableColumnFilter {
+export interface ITableColumnFilter {
   type: "simple" | "select" | "custom";
   placeholder: string;
   selectedText?: string;
@@ -14,28 +14,28 @@ export interface TableColumnFilter {
   options?: Array<any>;
   mode?: "multi" | "single";
   closeDropdownOnSelection?: boolean;
-  selectAllCheckbox?: SelectAllCheckbox;
+  selectAllCheckbox?: ISelectAllCheckbox;
   validator?: (rowValue: any, filterText: string) => boolean;
   init?: {
     value: any;
   };
 }
 
-export interface TableFilterQuery {
+export interface ITableFilterQuery {
   sort: Array<any>;
   filters: Array<any>;
   globalSearch: string;
 }
 
-export interface TableColumn {
+export interface ITableColumn {
   label: string;
   name: string;
   id?: string | number;
   visibility?: boolean;
-  filter?: TableColumnFilter;
+  filter?: ITableColumnFilter;
   sort?: boolean;
   initialSort?: boolean;
-  initialSortOrder?: "asc" | "desc" | false;
+  initialSortOrder?: "asc" | "desc" | "none";
   sortCaseSensitive?: boolean;
   slotName?: string;
   columnClasses?: string | Array<string>;
@@ -45,7 +45,7 @@ export interface TableColumn {
   uniqueId?: boolean;
 }
 
-export interface GlobalSearchConfig {
+export interface IGlobalSearchConfig {
   placeholder: string;
   visibility?: boolean;
   caseSensitive?: boolean;
@@ -58,7 +58,7 @@ export interface GlobalSearchConfig {
   };
 }
 
-export interface TableConfig {
+export interface ITableConfig {
   pagination?: boolean;
   paginationInfo?: boolean;
   visibleButtons?: number;
@@ -69,26 +69,23 @@ export interface TableConfig {
   rowsSelectable?: boolean;
   multiColumnSort?: boolean;
   highlightRowHoverColor?: string;
-  cardTitle?: string;
-  globalSearch?: GlobalSearchConfig;
+  globalSearch?: IGlobalSearchConfig;
   perPageOptions?: Array<number>;
   showResetButton?: boolean;
   showRefreshButton?: boolean;
   serverMode?: boolean;
-  cardMode?: boolean;
   selectedRowsInfo?: boolean;
   preservePageOnDataChange?: true;
-  loaderText?: string;
 }
 
-export interface TableCSSClasses {
+export interface ITableCSSClasses {
   tableWrapper?: string;
   table?: string | Array<string>;
   row?: string | Array<string>;
   cell?: string | Array<string>;
 }
 
-export interface TableActionsBtn {
+export interface ITableActionsBtn {
   icon: string;
   label: string;
   class: string;
@@ -96,7 +93,7 @@ export interface TableActionsBtn {
   eventPayload?: Record<string, any>;
 }
 
-export interface TableCustomFilter {
+export interface ITableCustomFilter {
   name: string;
   text: any;
   type: string;

@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { TableColumn } from "@/interfaces/datatable";
+import { ITableColumn } from "@/interfaces/datatable";
 import { computed, defineComponent, PropType } from "vue";
 import { swapVertical, arrowUp, arrowDown } from "ionicons/icons";
 import { IonIcon } from "@ionic/vue";
@@ -25,7 +25,7 @@ export default defineComponent({
       default: () => [] as Array<any>,
     },
     column: {
-      type: Object as PropType<TableColumn>,
+      type: Object as PropType<ITableColumn>,
       default: () => ({}),
     },
   },

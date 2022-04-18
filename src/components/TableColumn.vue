@@ -21,12 +21,12 @@
 import { defineComponent, PropType } from "vue";
 import { isSortableColumn } from "@/utils/Table";
 import SortIcon from "@/components/SortIcon.vue"
-import { TableColumn } from "@/interfaces/datatable";
+import { ITableColumn } from "@/interfaces/datatable";
 
 export default defineComponent({
   props: {
     column: {
-      type: Object as PropType<TableColumn>,
+      type: Object as PropType<ITableColumn>,
       required: true,
     },
     query: {

@@ -10,7 +10,7 @@
           <input
             class="form-check-input"
             type="checkbox"
-            v-model="selectAllRows"1
+            v-model="selectAllRows"
             value=""
             @change="onChange($event)"
           />

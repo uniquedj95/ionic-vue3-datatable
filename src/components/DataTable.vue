@@ -1,13 +1,14 @@
 <template>
-  <div :class="tableWrapperClasses">
+  <div :class="tableWrapperClasses" style="margin: .4rem">
     <table class="table" :class="tableClasses">
       <thead>
         <tr>
           <template v-for="(column, index) in cColumns">
-            <TableColumnVue
+            <table-column
               v-if="canShowColumn(column)"
               :key="index"
               :column="column"
+              :query="filterQuery"
               class="column-header"
               :class="columnClasses(column)"
               @updateSort="updateSortQuery(column)"
@@ -16,7 +17,6 @@
         </tr>
       </thead>
       <tbody>
-        <!-- data rows stars here -->
         <table-row
           v-for="(row, index) in cRows"
           :key="index"
@@ -27,7 +27,7 @@
           :highlightRowHoverColor="highlightRowHoverColor"
           :propRowClasses="classes.row"
           :propCellClasses="classes.cell"
-        ></table-row>
+        />
 
         <tr v-show="cRows.length === 0">
           <td :colspan="headerColSpan">
@@ -68,7 +68,6 @@ import {
   isArray,
 } from "lodash";
 import TableRow from "./TableRow.vue";
-import SelectAllRowsCheckbox from "./SelectAllRowsCheckBox.vue";
 import Pagination from "./CustomPagination.vue";
 import {
   computed,
@@ -76,30 +75,37 @@ import {
   nextTick,
   onMounted,
   PropType,
+  reactive,
   ref,
   watch,
 } from "vue";
 import {
-  GlobalSearchConfig,
-  TableActionsBtn,
-  TableColumn,
-  TableColumnFilter,
-  TableConfig,
-  TableCSSClasses,
-  TableFilterQuery,
+  IGlobalSearchConfig,
+  ITableActionsBtn,
+  ITableColumn,
+  ITableColumnFilter,
+  ITableConfig,
+  ITableCSSClasses,
+  ITableFilterQuery,
 } from "@/interfaces/datatable";
 import { closeCircle } from "ionicons/icons";
 import { canShowColumn, isSortableColumn } from "@/utils/Table";
-import TableColumnVue from "./TableColumn.vue";
+import TableColumn from "./TableColumn.vue";
 
 export default defineComponent({
+  name: "DataTable",
+  components: {
+    TableRow,
+    Pagination,
+    TableColumn,
+  },
   props: {
     rows: {
       type: Object as PropType<any[]>,
       required: true,
     },
     columns: {
-      type: Object as PropType<TableColumn[]>,
+      type: Object as PropType<ITableColumn[]>,
       required: true,
     },
     totalRows: {
@@ -111,23 +117,22 @@ export default defineComponent({
       default: false,
     },
     config: {
-      type: Object as PropType<TableConfig>,
+      type: Object as PropType<ITableConfig>,
       default: () => ({}),
     },
     classes: {
-      type: Object as PropType<TableCSSClasses>,
+      type: Object as PropType<ITableCSSClasses>,
       default: () => ({}),
     },
     actions: {
-      type: Object as PropType<TableActionsBtn[]>,
-      default: () => [] as Array<TableActionsBtn>,
+      type: Object as PropType<ITableActionsBtn[]>,
+      default: () => [] as Array<ITableActionsBtn>,
     },
     customFilters: {
-      type: Object as PropType<TableColumnFilter[]>,
+      type: Object as PropType<ITableColumnFilter[]>,
       ddefault: () => [],
     },
   },
-  // emits: ["resetQuery", "selectRow", "unselectRow", "selectAllRows", "unselectAllRows", "changeQuery"] as keyof TableActionsBtn.eventName,
   setup(props, { emit }) {
     const cRows = ref(cloneDeep(props.rows));
     const currentPage = ref(props.config.currentPage || 1);
@@ -181,27 +186,8 @@ export default defineComponent({
       return count;
     });
 
-    const globalSearch = ref<GlobalSearchConfig>({
-      placeholder: get(
-        props.config,
-        "globalSearch.placeholder",
-        "Enter search text"
-      ),
-      visibility: get(props.config, "globalSearch.visibility", true),
-      caseSensitive: get(props.config, "globalSearch.caseSensitive", false),
-      showClearButton: get(props.config, "globalSearch.showClearButton", true),
-      searchOnPressEnter: get(
-        props.config,
-        "globalSearch.searchOnPressEnter",
-        false
-      ),
-      searchDebounceRate: get(
-        props.config,
-        "globalSearch.searchDebounceRate",
-        60
-      ),
-      class: get(props.config, "globalSearch.class", ""),
-      init: get(props.config, "globalSearch.init.value", ""),
+    const globalSearch = reactive<IGlobalSearchConfig>(props.config?.globalSearch || {
+      placeholder: "Search here",
     });
 
     const showPaginationRow = computed(() => {
@@ -232,13 +218,13 @@ export default defineComponent({
       })
     );
 
-    const query = ref<TableFilterQuery>({
+    const filterQuery = reactive<ITableFilterQuery>({
       sort: [],
       filters: [],
       globalSearch: "",
     });
 
-    const isSortCaseSensitive = (column: TableColumn) => {
+    const isSortCaseSensitive = (column: ITableColumn) => {
       return get(column, "sortCaseSensitive", true);
     };
 
@@ -246,10 +232,10 @@ export default defineComponent({
       cColumns.value
         .filter((column) => !!column.initialSort)
         .some((column) => {
-          let result = findIndex(query.value.sort, { id: column.id });
+          let result = findIndex(filterQuery.sort, { id: column.id });
           if (result === -1) {
             const initialSortOrder = get(column, "initialSortOrder", "asc");
-            query.value.sort.push({
+            filterQuery.sort.push({
               id: column.id,
               name: column.name,
               order: initialSortOrder,
@@ -272,38 +258,40 @@ export default defineComponent({
       }
     };
 
-    const updateSortQuery = (column: TableColumn) => {
-      let result = findIndex(query.value.sort, {
+    const updateSortQuery = (column: ITableColumn) => {
+      let result = findIndex(filterQuery.sort, {
         id: column.id,
       });
 
+      console.log(result)
+
       if (result === -1) {
         if (!multiColumnSort.value) {
-          query.value.sort = [];
+          filterQuery.sort = [];
         }
-        query.value.sort.push({
+        filterQuery.sort.push({
           id: column.id,
           name: column.name,
           order: "asc",
           caseSensitive: isSortCaseSensitive(column),
         });
       } else {
-        query.value.sort[result].order =
-          query.value.sort[result].order == "asc" ? "desc" : "asc";
+        filterQuery.sort[result].order =
+          filterQuery.sort[result].order == "asc" ? "desc" : "asc";
       }
     };
 
     const resetSort = () => {
-      query.value.sort = [];
+      filterQuery.sort = [];
       filter(!preservePageOnDataChange.value);
     };
 
     const sort = () => {
-      if (query.value.sort.length !== 0) {
-        let orders = query.value.sort.map((sortConfig) => sortConfig.order);
+      if (filterQuery.sort.length !== 0) {
+        let orders = filterQuery.sort.map((sortConfig) => sortConfig.order);
         tempFilteredResults.value = orderBy(
           tempFilteredResults.value,
-          query.value.sort.map((sortConfig) => {
+          filterQuery.sort.map((sortConfig) => {
             return (row) => {
               let value = get(row, sortConfig.name);
               if (sortConfig.caseSensitive) return value !== null ? value : "";
@@ -316,13 +304,13 @@ export default defineComponent({
       paginateFilter();
     };
 
-    const getCellSlotName = (column: TableColumn) => {
+    const getCellSlotName = (column: ITableColumn) => {
       return get(column, "slotName") || column.name.replace(/\./g, "_");
     };
 
     const emitQueryParams = (page = null as null | number) => {
       if (serverMode.value && canEmitQueries.value) {
-        let queryParams = cloneDeep(query.value);
+        let queryParams = cloneDeep(filterQuery);
         let sort = queryParams.sort.map((o) => omit(o, "id"));
         let filters = queryParams.filters.map((o) => omit(o, "config"));
         let globalSearch = queryParams.globalSearch;
@@ -347,7 +335,7 @@ export default defineComponent({
       }
     };
 
-    const columnClasses = (column: TableColumn) => {
+    const columnClasses = (column: ITableColumn) => {
       let classes = "";
       const alignments = [
         "text-justify",
@@ -381,18 +369,10 @@ export default defineComponent({
       });
     };
 
-    const emitActionEvent = (action: TableActionsBtn) => {
-      let payload: Record<string, any> = {
-        eventPayload: cloneDeep(action.eventPayload),
-      };
-
-      emit(action.eventName, payload);
-    };
-
     const filter = (resetPage = true, isInit = false) => {
       let res = originalRows.value.filter((row) => {
         let flag = true;
-        query.value.filters.some((filter) => {
+        filterQuery.filters.some((filter) => {
            if (filter.type === "custom") {
             let index = findIndex(cColumns.value, { name: filter.name });
             if (index > -1) {
@@ -434,7 +414,7 @@ export default defineComponent({
     };
 
     watch(
-      [query.value.filters, query.value.globalSearch],
+      [filterQuery.filters, filterQuery.globalSearch],
       () => {
         if (!serverMode.value) {
           filter(!preservePageOnDataChange.value);
@@ -444,7 +424,7 @@ export default defineComponent({
     );
 
     watch(
-      query.value.sort,
+      filterQuery.sort,
       () => {
         if (!serverMode.value) {
           sort();
@@ -453,7 +433,7 @@ export default defineComponent({
       { deep: true }
     );
 
-    watch(query, () => {
+    watch(filterQuery, () => {
       if (serverMode.value) emitQueryParams(), { deep: true };
     });
 
@@ -507,13 +487,13 @@ export default defineComponent({
         if (!serverMode.value && newVal) {
           newVal.forEach((customFilter: any) => {
             if (customFilter.name) {
-              let index = query.value.filters.findIndex(
+              let index = filterQuery.filters.findIndex(
                 (filter) => filter.name === customFilter.name
               );
               if (index === -1) {
-                query.value.filters.push(customFilter);
+                filterQuery.filters.push(customFilter);
               } else {
-                query.value.filters[index].text = customFilter.text;
+                filterQuery.filters[index].text = customFilter.text;
               }
             }
           });
@@ -554,7 +534,7 @@ export default defineComponent({
       closeCircle,
       cRows,
       cColumns,
-      query,
+      filterQuery,
       currentPage,
       perPageItems,
       serverMode,
@@ -584,13 +564,7 @@ export default defineComponent({
       isSortableColumn,
       columnClasses,
       updateSortQuery,
-      emitActionEvent,
     };
-  },
-  components: {
-    TableRow,
-    Pagination,
-    TableColumnVue,
   },
 });
 </script>

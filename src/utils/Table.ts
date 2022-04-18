@@ -1,11 +1,11 @@
-import { TableColumn } from "@/interfaces/datatable";
+import { ITableColumn } from "@/interfaces/datatable";
 import { get } from "lodash";
 
-export function canShowColumn(column: TableColumn){
+export function canShowColumn(column: ITableColumn){
   return get(column, "visibility", true);
 }
 
-export function isSortableColumn(column: TableColumn){
+export function isSortableColumn(column: ITableColumn){
   return !!get(column, "sort");
 }
 
@@ -19,4 +19,8 @@ export function isColumnSorted(columnName: string, sortQuery = null as any){
 
 export function getRowValue(row: Record<string, any>, path: string) {
   return get(row, path, '')
+}
+
+export function getCellSlotName (column: ITableColumn) {
+  return get(column, "slotName") || column.name.replace(/\./g, "_");
 }

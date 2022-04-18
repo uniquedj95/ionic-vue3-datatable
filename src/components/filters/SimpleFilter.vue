@@ -28,14 +28,14 @@
 
 <script lang="ts">
 import useEmitter from "@/composables/useEmitter";
-import { TableColumn } from "@/interfaces/datatable";
+import { ITableColumn } from "@/interfaces/datatable";
 import { debounce } from "lodash";
 import { computed, defineComponent, onMounted, PropType, ref } from "vue";
 
 export default defineComponent({
   props: {
     column: {
-      type: Object as PropType<TableColumn>,
+      type: Object as PropType<ITableColumn>,
       default: () => ({}),
     },
   },

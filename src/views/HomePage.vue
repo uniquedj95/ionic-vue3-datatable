@@ -34,11 +34,11 @@ import {
 import { defineComponent, onMounted, ref } from "vue";
 import DataTable from "@/components/DataTable.vue";
 import {
-  TableActionsBtn,
-  TableColumn,
-  TableColumnFilter,
-  TableConfig,
-  TableCSSClasses,
+  ITableActionsBtn,
+  ITableColumn,
+  ITableColumnFilter,
+  ITableConfig,
+  ITableCSSClasses,
 } from "@/interfaces/datatable";
 import chance from "chance"
 
@@ -54,14 +54,14 @@ export default defineComponent({
   },
   setup() {
     const rows = ref<any[]>();
-    const customFilters = ref<TableColumnFilter[]>([]);
-    const actions = ref<TableActionsBtn[]>([]);
-    const cssClasses = ref<TableCSSClasses>({
+    const customFilters = ref<ITableColumnFilter[]>([]);
+    const actions = ref<ITableActionsBtn[]>([]);
+    const cssClasses = ref<ITableCSSClasses>({
       tableWrapper: "responsive-table",
       table: "striped-table bordered-table",
     });
 
-    const columns = ref<TableColumn[]>([
+    const columns = ref<ITableColumn[]>([
       {
         label: "id",
         name: "id",
@@ -99,7 +99,7 @@ export default defineComponent({
       },
     ]);
 
-    const config = ref<TableConfig>({
+    const config = ref<ITableConfig>({
       pagination: true,
       paginationInfo: true,
       visibleButtons: 7,
@@ -109,7 +109,6 @@ export default defineComponent({
       highlightRowHover: true,
       rowsSelectable: true,
       multiColumnSort: false,
-      cardTitle: "Example datatable",
       globalSearch: {
         placeholder: "Enter custom Search text",
         visibility: true,
@@ -122,7 +121,6 @@ export default defineComponent({
       showResetButton: true,
       showRefreshButton: true,
       serverMode: false,
-      cardMode: true,
       selectedRowsInfo: true,
       preservePageOnDataChange: true,
     });
