@@ -158,7 +158,7 @@
           :selectedItems="selectedItems"
           :highlightRowHover="highlightRowHover"
           :highlightRowHoverColor="highlightRowHoverColor"
-          :propPowClasses="classes.row"
+          :propRowClasses="classes.row"
           :propCellClasses="classes.cell"
           :uniqueId="uniqueId"
           @addRow="handleAddRow"
