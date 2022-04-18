@@ -127,14 +127,14 @@ export default defineComponent({
       preservePageOnDataChange: true,
     });
 
-    const fetchData = async () => {
+    const fetchData = async (size = 500) => {
       const loader = await loadingController.create({
         message: "loading data...",
       });
       loader.present();
       setTimeout(() => {
         const users: any[] = [];
-        for (let i = 1; i < 331; i++) {
+        for (let i = 1; i < size; i++) {
           users.push({
             id: i,
             firstName: chance().first(),
