@@ -19,7 +19,7 @@
         :key="index"
         :class="cellClasses(column)"
       >
-        {{ row[column.name] }}
+        {{ getRowValue(row, column.name) }}
       </td>
     </template>
   </tr>
@@ -38,7 +38,7 @@ import {
 import { differenceWith, isEqual, get, isArray, isEmpty } from "lodash";
 import { TableColumn } from "@/interfaces/datatable";
 import useEmitter from "@/composables/useEmitter";
-import { canShowColumn } from "@/utils/Table";
+import { canShowColumn, getRowValue } from "@/utils/Table";
 
 export default defineComponent({
   components: {
@@ -190,6 +190,7 @@ export default defineComponent({
       rowClasses,
       cellClasses,
       canShowColumn,
+      getRowValue,
       rowHover,
       addRow,
       removeRow,
