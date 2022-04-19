@@ -32,7 +32,7 @@ import {
   loadingController,
 } from "@ionic/vue";
 import { defineComponent, onMounted, ref } from "vue";
-import DataTable from "@/components/DataTable.vue";
+import DataTable from "@/components/DataTable";
 import {
   ITableActionsBtn,
   ITableColumn,

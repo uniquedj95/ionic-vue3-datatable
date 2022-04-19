@@ -42,10 +42,6 @@ export default defineComponent({
       type: Object as PropType<number[]>,
       default: () => [5, 10, 15] as Array<number>,
     },
-    totalOriginalRows: {
-      type: Number,
-      default: 0,
-    },
   },
   components: {
     IonItem,

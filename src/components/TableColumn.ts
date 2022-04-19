@@ -10,7 +10,7 @@ export default defineComponent({
       type: Object as PropType<ITableColumn>,
       required: true,
     },
-    query: {
+    filterQuery: {
       type: Object as PropType<ITableFilterQuery>,
       default: () => ({}),
     },
@@ -20,7 +20,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const isSortable = computed(() => isSortableColumn(props.column));
     const sortIcon = computed(() => {
-      const query = props.query.sort.find(q => q.name === props.column.name)
+      const query = props.filterQuery.sort.find(q => q.name === props.column.name)
       return !query 
         ? swapVertical
         : query.order.toLowerCase() === 'asc'

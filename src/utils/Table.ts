@@ -25,14 +25,29 @@ export function getCellSlotName(column: ITableColumn) {
 }
 
 export function getCellCSSClassess(column: ITableColumn, globalCellClassess = '' as  string | string[]) {
-  const defaultTextAlignment = "text-center";
   let classes = isArray(globalCellClassess) 
     ? " " + globalCellClassess.toString().replace(',', " ")
     : " " + globalCellClassess
   
   classes += column.rowTextAlignment && textAlignments.includes(column.rowTextAlignment)
     ? " " + column.rowTextAlignment
-    : " " + defaultTextAlignment;
+    : " text-center";
+
+  return classes;
+}
+
+export function getColumnCSSClasses(column: ITableColumn) {
+  let classes = "column-header";
+  classes += column.columnTextAlignment && textAlignments.includes(column.columnTextAlignment)
+    ? column.columnTextAlignment
+    : " text-center";
+
+  if ("columnClasses" in column) {
+    classes += " " + column.columnClasses;
+  }
+  if (isSortableColumn(column)) {
+    classes = classes + " sort-cursor";
+  }
 
   return classes;
 }
