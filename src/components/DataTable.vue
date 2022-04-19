@@ -68,7 +68,7 @@ import {
   isArray,
 } from "lodash";
 import TableRow from "./TableRow";
-import Pagination from "./CustomPagination.vue";
+import Pagination from "./Pagination";
 import {
   computed,
   defineComponent,
