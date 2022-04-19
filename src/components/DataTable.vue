@@ -90,7 +90,7 @@ import {
 } from "@/interfaces/datatable";
 import { closeCircle } from "ionicons/icons";
 import { canShowColumn, isSortableColumn } from "@/utils/Table";
-import TableColumn from "./TableColumn.vue";
+import TableColumn from "./TableColumn";
 
 export default defineComponent({
   name: "DataTable",

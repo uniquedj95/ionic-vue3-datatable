@@ -1,17 +1,4 @@
-<template>
-  <th 
-    v-on="isSortable ? { click: () => $emit('updateSort', column) } : {}"
-    :class="{ 'sort-cursor': isSortableColumn }"
-  >
-    {{ columnName }}
-    <div class="ion-float-right" v-if="isSortable" style="margin-right: .4em">
-      <ion-icon :icon="sortIcon"></ion-icon>
-    </div>
-  </th>
-</template>
-
-<script lang="ts">
-import { computed, defineComponent, PropType } from "vue";
+import { computed, defineComponent, h, PropType } from "vue";
 import { isSortableColumn } from "@/utils/Table";
 import { swapVertical, arrowUp, arrowDown } from "ionicons/icons";
 import { IonIcon } from "@ionic/vue";
@@ -30,27 +17,35 @@ export default defineComponent({
   },
   emits: ["updateSort"],
   components: { IonIcon },
-  setup(props) {
+  setup(props, { emit }) {
     const isSortable = computed(() => isSortableColumn(props.column));
-    const columnName = computed(() => props.column.label.toUpperCase());
     const sortIcon = computed(() => {
-    const query = props.query.sort.find(q => q.name === props.column.name)
+      const query = props.query.sort.find(q => q.name === props.column.name)
       return !query 
         ? swapVertical
         : query.order.toLowerCase() === 'asc'
         ? arrowUp
         : arrowDown
     })
-    return {
-      isSortable,
-      columnName,
-      sortIcon,
-    };
+
+    return () => h(
+      'th', { 
+        onClick() {
+          if(isSortable.value) emit('updateSort', props.column)
+        },
+        style: { cursor: isSortable.value ? "pointer" : "default" }
+      }, 
+      [
+        h('span', props.column.label),
+        isSortable.value && h(IonIcon, { 
+          icon: sortIcon.value, 
+          style: { 
+            marginRight: "5px", 
+            float: "right",
+            cursor: 'pointer'
+          } 
+        })
+      ]
+    );
   },
 });
-</script>
-<style scoped>
-.sort-cursor {
-  cursor: pointer;
-}
-</style>
