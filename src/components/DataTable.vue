@@ -67,7 +67,7 @@ import {
   findIndex,
   isArray,
 } from "lodash";
-import TableRow from "./TableRow.vue";
+import TableRow from "./TableRow";
 import Pagination from "./CustomPagination.vue";
 import {
   computed,
