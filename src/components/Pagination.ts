@@ -126,7 +126,9 @@ export default defineComponent({
           h(IonCol, { size: "8" }, h(
             "div", { class: "pagination" }, h(
               "div", { class: "btn-group" }, [
-              h(IonButton, { color: "light", disabled: props.currentPage === start.value, onClick: () => pageHandler(props.currentPage - 1) }, "<<"),
+              h(IonButton, { color: "light", disabled: props.currentPage === start.value, onClick: () => pageHandler(props.currentPage - 1) }, h(
+                'span', { style: { fontSize: '28px'}}, "«"
+              )),
               props.total === 0
                 ? h(IonButton, { disabled: true }, "...")
                 : h('div', [
@@ -136,7 +138,9 @@ export default defineComponent({
                   end.value < (totalPages.value - 2) && h(IonButton, { color: "light", disabled: true }, '...'),
                   end.value < (totalPages.value - 2) && h(IonButton, { color: "light", onClick: () => pageHandler(totalPages.value) }, totalPages.value),
                 ]),
-              h(IonButton, { color: "light", disabled: props.currentPage === end.value, onClick: () => pageHandler(props.currentPage + 1) }, ">>"),
+              h(IonButton, { color: "light", disabled: props.currentPage === end.value, onClick: () => pageHandler(props.currentPage + 1) },  h(
+                'span', { style: { fontSize: '28px'}}, "»"
+              )),
               h(IonItem, { class: "box", lines: "none", style: { '--min-height': '11px', marginLeft: '.5rem' } }, [
                 h(IonLabel, "Go to page"),
                 h(IonInput, {
