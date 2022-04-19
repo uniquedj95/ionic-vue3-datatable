@@ -146,7 +146,7 @@ export default defineComponent({
       cColumns.value
         .filter((column) => !!column.initialSort)
         .some((column) => {
-          let result = findIndex(filterQuery.sort, { name: column.name });
+          const result = findIndex(filterQuery.sort, { name: column.name });
           if (result === -1) {
             const initialSortOrder = get(column, "initialSortOrder", "asc");
             filterQuery.sort.push({
@@ -163,8 +163,8 @@ export default defineComponent({
 
     const paginateFilter = () => {
       if (pagination.value) {
-        let start = (currentPage.value - 1) * perPageItems.value;
-        let end = start + perPageItems.value;
+        const start = (currentPage.value - 1) * perPageItems.value;
+        const end = start + perPageItems.value;
         cRows.value = tempFilteredResults.value.slice(start, end);
       } else {
         cRows.value = cloneDeep(tempFilteredResults.value);
@@ -172,7 +172,7 @@ export default defineComponent({
     };
 
     const updateSortQuery = (column: ITableColumn) => {
-      let result = findIndex(filterQuery.sort, {
+      const result = findIndex(filterQuery.sort, {
         name: column.name,
       });
 
@@ -198,12 +198,12 @@ export default defineComponent({
 
     const sort = () => {
       if (filterQuery.sort.length !== 0) {
-        let orders = filterQuery.sort.map((sortConfig) => sortConfig.order);
+        const orders = filterQuery.sort.map((sortConfig) => sortConfig.order);
         tempFilteredResults.value = orderBy(
           tempFilteredResults.value,
           filterQuery.sort.map((sortConfig) => {
             return (row) => {
-              let value = get(row, sortConfig.name);
+              const value = get(row, sortConfig.name);
               if (sortConfig.caseSensitive) return value !== null ? value : "";
               return value !== null ? value.toString().toLowerCase() : "";
             };
@@ -216,11 +216,11 @@ export default defineComponent({
 
     const emitQueryParams = (page = null as null | number) => {
       if (serverMode.value && canEmitQueries.value) {
-        let queryParams = cloneDeep(filterQuery);
-        let sort = queryParams.sort.map((o) => omit(o, "id"));
-        let filters = queryParams.filters.map((o) => omit(o, "config"));
-        let globalSearch = queryParams.globalSearch;
-        let itemsPerPage = clone(perPageItems.value);
+        const queryParams = cloneDeep(filterQuery);
+        const sort = queryParams.sort.map((o) => omit(o, "id"));
+        const filters = queryParams.filters.map((o) => omit(o, "config"));
+        const globalSearch = queryParams.globalSearch;
+        const itemsPerPage = clone(perPageItems.value);
 
         if (page === null) {
           if (preservePageOnDataChange.value) {
@@ -230,7 +230,7 @@ export default defineComponent({
             page = 1;
           }
         }
-        let payload = {
+        const payload = {
           sort: sort,
           filters: filters,
           globalSearch: globalSearch,
@@ -252,15 +252,15 @@ export default defineComponent({
     };
 
     const filter = (resetPage = true, isInit = false) => {
-      let res = originalRows.value.filter((row) => {
+      const res = originalRows.value.filter((row) => {
         let flag = true;
         filterQuery.filters.some((filter) => {
            if (filter.type === "custom") {
-            let index = findIndex(cColumns.value, { name: filter.name });
+            const index = findIndex(cColumns.value, { name: filter.name });
             if (index > -1) {
-              let column = cColumns.value[index];
+              const column = cColumns.value[index];
               if (column.filter?.validator) {
-                let result = column.filter.validator(
+                const result = column.filter.validator(
                   get(row, filter.name),
                   filter.text
                 );
@@ -287,7 +287,7 @@ export default defineComponent({
       if (resetPage || totalFilteredRows.value === 0) {
         currentPage.value = 1;
       } else if (!isInit) {
-        let newTotalPage = Math.ceil(
+        const newTotalPage = Math.ceil(
           totalFilteredRows.value / perPageItems.value
         );
         currentPage.value =
@@ -333,7 +333,7 @@ export default defineComponent({
           filter(!preservePageOnDataChange.value, !isFirstTime.value);
         } else {
           if (preservePageOnDataChange.value) {
-            let predictedTotalPage = Math.ceil(
+            const predictedTotalPage = Math.ceil(
               totalFilteredRows.value / perPageItems.value
             );
             if (predictedTotalPage !== 0) {
@@ -359,7 +359,7 @@ export default defineComponent({
         if (!serverMode.value && newVal) {
           newVal.forEach((customFilter: any) => {
             if (customFilter.name) {
-              let index = filterQuery.filters.findIndex(
+              const index = filterQuery.filters.findIndex(
                 (filter) => filter.name === customFilter.name
               );
               if (index === -1) {
