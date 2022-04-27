@@ -78,7 +78,7 @@ export interface ITableConfig {
 }
 
 export interface ITableCSSClasses {
-  tableWrapper?: string;
+  tableWrapper?: string | Array<string>;
   table?: string | Array<string>;
   row?: string | Array<string>;
   cell?: string | Array<string>;
