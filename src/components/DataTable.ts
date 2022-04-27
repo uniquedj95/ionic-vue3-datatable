@@ -63,18 +63,14 @@ export interface ITableConfig {
   visibleButtons?: number;
   perPageItems?: number;
   currentPage?: number;
-  checkboxRows?: boolean;
   highlightRowHover?: boolean;
   rowsSelectable?: boolean;
   multiColumnSort?: boolean;
   highlightRowHoverColor?: string;
-  globalSearch?: IGlobalSearchConfig;
   perPageOptions?: Array<number>;
-  showResetButton?: boolean;
-  showRefreshButton?: boolean;
   serverMode?: boolean;
   selectedRowsInfo?: boolean;
-  preservePageOnDataChange?: true;
+  preservePageOnDataChange?: boolean;
 }
 
 export interface ITableCSSClasses {
