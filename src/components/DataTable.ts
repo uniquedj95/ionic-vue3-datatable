@@ -1,3 +1,103 @@
+export interface ISelectAllCheckbox {
+  visibility: boolean;
+  text: string;
+}
+
+export interface ITableColumnFilter {
+  type: "simple" | "select" | "custom";
+  placeholder: string;
+  selectedText?: string;
+  slotName?: string;
+  showClearButton?: boolean;
+  filterOnPressEnter?: boolean;
+  debounceRate?: number;
+  options?: Array<any>;
+  mode?: "multi" | "single";
+  closeDropdownOnSelection?: boolean;
+  selectAllCheckbox?: ISelectAllCheckbox;
+  validator?: (rowValue: any, filterText: string) => boolean;
+  init?: {
+    value: any;
+  };
+}
+
+export interface ITableFilterQuery {
+  sort: Array<any>;
+  filters: Array<any>;
+  globalSearch: string;
+}
+
+export interface ITableColumn {
+  label: string;
+  name: string;
+  id?: string | number;
+  visibility?: boolean;
+  filter?: ITableColumnFilter;
+  sortable?: boolean;
+  initialSort?: boolean;
+  initialSortOrder?: "asc" | "desc" | "none";
+  sortCaseSensitive?: boolean;
+  columnClasses?: string | Array<string>;
+  rowClasses?: string | Array<string>;
+  rowTextAlignment?: string;
+  columnTextAlignment?: string;
+  uniqueId?: boolean;
+}
+
+export interface IGlobalSearchConfig {
+  placeholder: string;
+  visibility?: boolean;
+  caseSensitive?: boolean;
+  showClearButton?: boolean;
+  class?: string;
+  searchOnPressEnter?: boolean;
+  searchDebounceRate?: number;
+  init?: {
+    value: any;
+  };
+}
+
+export interface ITableConfig {
+  pagination?: boolean;
+  paginationInfo?: boolean;
+  visibleButtons?: number;
+  perPageItems?: number;
+  currentPage?: number;
+  checkboxRows?: boolean;
+  highlightRowHover?: boolean;
+  rowsSelectable?: boolean;
+  multiColumnSort?: boolean;
+  highlightRowHoverColor?: string;
+  globalSearch?: IGlobalSearchConfig;
+  perPageOptions?: Array<number>;
+  showResetButton?: boolean;
+  showRefreshButton?: boolean;
+  serverMode?: boolean;
+  selectedRowsInfo?: boolean;
+  preservePageOnDataChange?: true;
+}
+
+export interface ITableCSSClasses {
+  tableWrapper?: string;
+  table?: string | Array<string>;
+  row?: string | Array<string>;
+  cell?: string | Array<string>;
+}
+
+export interface ITableActionsBtn {
+  icon: string;
+  label: string;
+  class: string;
+  eventName: string;
+  eventPayload?: Record<string, any>;
+}
+
+export interface ITableCustomFilter {
+  name: string;
+  text: any;
+  type: string;
+}
+
 import {
   cloneDeep,
   orderBy,
@@ -20,14 +120,6 @@ import {
   ref,
   watch,
 } from "vue";
-import {
-  ITableActionsBtn,
-  ITableColumn,
-  ITableColumnFilter,
-  ITableConfig,
-  ITableCSSClasses,
-  ITableFilterQuery,
-} from "@/interfaces/datatable";
 import { canShowColumn, getColumnCSSClasses } from "@/utils/Table";
 import TableColumn from "./TableColumn";
 
@@ -255,7 +347,7 @@ export default defineComponent({
       const res = originalRows.value.filter((row) => {
         let flag = true;
         filterQuery.filters.some((filter) => {
-           if (filter.type === "custom") {
+          if (filter.type === "custom") {
             const index = findIndex(cColumns.value, { name: filter.name });
             if (index > -1) {
               const column = cColumns.value[index];
@@ -305,8 +397,8 @@ export default defineComponent({
       { deep: true }
     );
 
-    watch(filterQuery, () =>  serverMode.value ? emitQueryParams() : sort(), { 
-      deep: true 
+    watch(filterQuery, () => serverMode.value ? emitQueryParams() : sort(), {
+      deep: true
     });
 
     watch(perPageItems, () => {
@@ -403,54 +495,54 @@ export default defineComponent({
     });
 
     return () => h(
-      "div", { class: 'table-responsive' + props.classes.tableWrapper, style: { margin: ".4rem"}}, h(
+      "div", { class: 'table-responsive' + props.classes.tableWrapper, style: { margin: ".4rem" } }, h(
         "table", { class: tableClasses.value }, [
-          h('thead', h('tr', 
-            cColumns.value.map((column, key) => canShowColumn(column) && h(
-              TableColumn, {
-                key,
-                column,
-                filterQuery,
-                class: getColumnCSSClasses(column),
-                onUpdateSort: () => updateSortQuery(column),
-              }
-            ))
-          )),
-          h('tbody', [
-            cRows.value.map((row, key) => h(TableRow, {
-              key,
-              row,
-              rowIndex: key,
-              columns: cColumns.value,
-              highlightRowHover: highlightRowHover.value,
-              highlightRowHoverColor: highlightRowHoverColor.value,
-              globalRowCSSClasses: props.classes.row,
-              globalCellCSSClasses: props.classes.cell,
-            })),
-            cRows.value.length === 0 && h(
-              'tr', h(
-                'td', { colspan: headerColSpan.value }, h(
-                  'div', { class: 'empty-results' }, "No data found"
-                )
-              )
-            ),
-            pagination.value && h(
-              'tr', { class: 'pagination-row' }, h(
-                'td', { colspan: headerColSpan.value }, h(
-                  Pagination, {
-                    currentPage: currentPage.value,
-                    total: totalFilteredRows.value,
-                    perPageItems: perPageItems.value,
-                    perPageOptions: perPageOptions.value,
-                    visibleButtons: visibleButtons.value,
-                    onUpdateCurrentPage: (newPage) => currentPage.value = newPage,
-                    onUpdatePerPageItems: (newPerPageItems) => perPageItems.value = newPerPageItems,
-                  }
-                )
+        h('thead', h('tr',
+          cColumns.value.map((column, key) => canShowColumn(column) && h(
+            TableColumn, {
+            key,
+            column,
+            filterQuery,
+            class: getColumnCSSClasses(column),
+            onUpdateSort: () => updateSortQuery(column),
+          }
+          ))
+        )),
+        h('tbody', [
+          cRows.value.map((row, key) => h(TableRow, {
+            key,
+            row,
+            rowIndex: key,
+            columns: cColumns.value,
+            highlightRowHover: highlightRowHover.value,
+            highlightRowHoverColor: highlightRowHoverColor.value,
+            globalRowCSSClasses: props.classes.row,
+            globalCellCSSClasses: props.classes.cell,
+          })),
+          cRows.value.length === 0 && h(
+            'tr', h(
+              'td', { colspan: headerColSpan.value }, h(
+                'div', { class: 'empty-results' }, "No data found"
               )
             )
-          ]),
-        ]
+          ),
+          pagination.value && h(
+            'tr', { class: 'pagination-row' }, h(
+              'td', { colspan: headerColSpan.value }, h(
+                Pagination, {
+                currentPage: currentPage.value,
+                total: totalFilteredRows.value,
+                perPageItems: perPageItems.value,
+                perPageOptions: perPageOptions.value,
+                visibleButtons: visibleButtons.value,
+                onUpdateCurrentPage: (newPage) => currentPage.value = newPage,
+                onUpdatePerPageItems: (newPerPageItems) => perPageItems.value = newPerPageItems,
+              }
+              )
+            )
+          )
+        ]),
+      ]
       )
     )
   },
