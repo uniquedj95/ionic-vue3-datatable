@@ -58,7 +58,7 @@ export interface IGlobalSearchConfig {
 }
 
 export interface ITableConfig {
-  pagination?: boolean;
+  paginated?: boolean;
   paginationInfo?: boolean;
   visibleButtons?: number;
   perPageItems?: number;
@@ -92,10 +92,11 @@ export interface ITableActionsBtn {
   eventPayload?: Record<string, any>;
 }
 
-export interface ITableCustomFilter {
+export interface ITableFilter {
   name: string;
-  text: any;
-  type: string;
+  placeholder?: any;
+  type?: string;
+  handler: (filter: string | number | Array<string| number>) => void;
 }
 
 import {
