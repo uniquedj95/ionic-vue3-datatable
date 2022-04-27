@@ -44,19 +44,6 @@ export interface ITableColumn {
   uniqueId?: boolean;
 }
 
-export interface IGlobalSearchConfig {
-  placeholder: string;
-  visibility?: boolean;
-  caseSensitive?: boolean;
-  showClearButton?: boolean;
-  class?: string;
-  searchOnPressEnter?: boolean;
-  searchDebounceRate?: number;
-  init?: {
-    value: any;
-  };
-}
-
 export interface ITableConfig {
   paginated?: boolean;
   paginationInfo?: boolean;
@@ -90,8 +77,15 @@ export interface ITableActionsBtn {
 
 export interface ITableFilter {
   name: string;
-  placeholder?: any;
   type?: string;
+  placeholder?: string;
+  visible?: boolean;
+  caseSensitive?: boolean;
+  showClearButton?: boolean;
+  CSSClass?: string;
+  filterOnPressEnter?: boolean;
+  debounceRate?: number;
+  initValue?: string | number;
   handler: (filter: string | number | Array<string| number>) => void;
 }
 
