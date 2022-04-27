@@ -6,11 +6,8 @@ function createEntry(options) {
   const config = {
     input: './src/components/DataTable.ts',
     external: [
-      'vue',
-      'lodash',
-      'ionic',
-      'ionicons',
-      '@ionic/vue'
+      ...Object.keys(pkg.dependencies || {}),
+      ...Object.keys(pkg.devDependencies || {}),
     ],
     output: {
       name: 'DataTable',
